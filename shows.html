@@ -555,6 +555,11 @@
     tickets.filter(t => t.show.is_past && !t.has_feedback).forEach(t => {
       wireUpFeedback(t.order_id);
     });
+
+    // Wire up share toggles
+    tickets.filter(t => !t.show.is_past && t.quantity > 1).forEach(t => {
+      wireUpShare(t.order_id, t.quantity);
+    });
   }
 
   function buildTicketHTML(t) {
@@ -597,6 +602,38 @@
       feedbackHTML = `<div class="feedback-done">&#10003; Thanks for the feedback!</div>`;
     }
 
+    let shareHTML = '';
+    if (!t.show.is_past && t.quantity > 1) {
+      shareHTML = `
+        <div style="margin-top:.5rem">
+          <span class="share-toggle" data-order="${t.order_id}" style="font-size:.72rem; color:var(--green-dim); cursor:pointer; text-decoration:underline;">Share a ticket</span>
+          <div id="share-form-${t.order_id}" style="display:none; margin-top:.5rem; border-top:1px solid var(--green-dark); padding-top:.5rem;">
+            <div class="row" style="margin-bottom:.3rem; font-size:.72rem;">SEND TICKET TO</div>
+            <div class="verify-box" style="border-color:var(--green-dark); background:transparent; padding:.6rem;">
+              <div style="font-size:.72rem; color:var(--green-dim); margin-bottom:.3rem;">NAME (optional)</div>
+              <div class="input-row">
+                <span class="input-pfx">$&gt;</span>
+                <input type="text" id="share-name-${t.order_id}" placeholder="Recipient name" />
+              </div>
+              <div style="font-size:.72rem; color:var(--green-dim); margin:.4rem 0 .3rem;">PHONE</div>
+              <div class="input-row">
+                <span class="input-pfx">$&gt;</span>
+                <input type="tel" id="share-phone-${t.order_id}" placeholder="(555) 000-0000" />
+              </div>
+              ${t.quantity > 2 ? `
+                <div style="font-size:.72rem; color:var(--green-dim); margin:.4rem 0 .3rem;">HOW MANY (max ${t.quantity - 1})</div>
+                <div class="input-row">
+                  <span class="input-pfx">$&gt;</span>
+                  <input type="number" id="share-qty-${t.order_id}" value="1" min="1" max="${t.quantity - 1}" style="background:transparent; border:none; outline:none; color:var(--green); font-family:inherit; font-size:.85rem; width:100%; padding:.4rem .4rem .4rem 0;" />
+                </div>
+              ` : ''}
+              <button class="btn" id="share-btn-${t.order_id}" style="margin-top:.5rem;">Share</button>
+              <div class="verify-flash" id="share-flash-${t.order_id}"></div>
+            </div>
+          </div>
+        </div>`;
+    }
+
     return `
       <div class="ticket-card${t.show.is_past ? ' past' : ''}">
         <div class="row">DATE ......... <em>${t.show.date}</em></div>
@@ -605,6 +642,7 @@
         <div class="row">TICKETS ...... <em>${t.quantity}</em></div>
         ${venueHTML}
         ${comediansHTML}
+        ${shareHTML}
         ${feedbackHTML}
       </div>`;
   }
@@ -646,6 +684,65 @@
         }
       });
     }
+  }
+
+  // ── SHARE TICKET ──
+  function wireUpShare(orderId, maxQty) {
+    const toggle = document.querySelector(`.share-toggle[data-order="${orderId}"]`);
+    if (!toggle) return;
+
+    toggle.addEventListener('click', () => {
+      const form = document.getElementById(`share-form-${orderId}`);
+      const isOpen = form.style.display !== 'none';
+      form.style.display = isOpen ? 'none' : 'block';
+      toggle.textContent = isOpen ? 'Share a ticket' : 'Cancel';
+    });
+
+    const shareBtn = document.getElementById(`share-btn-${orderId}`);
+    if (!shareBtn) return;
+
+    shareBtn.addEventListener('click', async () => {
+      const recipientPhone = document.getElementById(`share-phone-${orderId}`).value.trim();
+      const recipientName = document.getElementById(`share-name-${orderId}`).value.trim();
+      const qtyEl = document.getElementById(`share-qty-${orderId}`);
+      const qty = qtyEl ? parseInt(qtyEl.value) || 1 : 1;
+      const flash = document.getElementById(`share-flash-${orderId}`);
+
+      if (!recipientPhone) {
+        flash.textContent = '$ Phone number required';
+        flash.className = 'verify-flash err';
+        return;
+      }
+
+      shareBtn.disabled = true;
+      shareBtn.textContent = 'Sharing...';
+
+      try {
+        const res = await fetch(`${API_BASE}/share-ticket`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-guest-token': guestToken },
+          body: JSON.stringify({
+            order_id: orderId,
+            recipient_phone: recipientPhone,
+            recipient_name: recipientName,
+            quantity: qty,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        flash.textContent = '$ Ticket shared! They\'ll get a text.';
+        flash.className = 'verify-flash ok';
+
+        // Reload tickets to reflect updated quantities
+        setTimeout(() => loadTickets(), 1500);
+      } catch (err) {
+        flash.textContent = '$ ' + err.message;
+        flash.className = 'verify-flash err';
+        shareBtn.disabled = false;
+        shareBtn.textContent = 'Share';
+      }
+    });
   }
 
   // ── REVEAL COUNTDOWN ──
