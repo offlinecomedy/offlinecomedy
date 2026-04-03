@@ -108,7 +108,12 @@
       <div class="ln bright" style="margin-bottom:.3rem; font-size:1rem;">[ ${c.name.toUpperCase()} ]</div>
 
       ${igHandle ? `<a class="ig-link" href="https://instagram.com/${igHandle}" target="_blank">@${igHandle}</a>` : ''}
-      ${c.followers ? `<span style="font-size:.72rem; color:var(--green-dim); margin-left:.6rem;">${c.followers.toLocaleString()} followers</span>` : ''}
+      <span style="font-size:.72rem; color:var(--green-dim); margin-left:.6rem;">
+        <input type="number" id="follower-input" value="${c.followers || ''}" placeholder="0" style="background:transparent; border:1px solid var(--green-dark); color:var(--green); font-family:inherit; font-size:.72rem; width:70px; padding:.15rem .3rem; outline:none; text-align:right;" />
+        followers
+        <span id="save-followers" style="cursor:pointer; text-decoration:underline; margin-left:.4rem; color:var(--green-dim); font-size:.68rem;">update</span>
+        <span id="follower-flash" style="font-size:.66rem; margin-left:.3rem;"></span>
+      </span>
 
       <hr class="sep" />
 
@@ -173,6 +178,26 @@
       }
 
       listEl.appendChild(card);
+    });
+
+    // Wire up follower update
+    document.getElementById('save-followers').addEventListener('click', async () => {
+      const val = parseInt(document.getElementById('follower-input').value) || 0;
+      const flashEl = document.getElementById('follower-flash');
+      try {
+        const res = await fetch(`${API}/admin-comedian`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+          body: JSON.stringify({ id: comedianId, followers: val }),
+        });
+        if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+        flashEl.textContent = 'saved';
+        flashEl.style.color = 'var(--green)';
+        setTimeout(() => { flashEl.textContent = ''; }, 2000);
+      } catch (err) {
+        flashEl.textContent = err.message;
+        flashEl.style.color = 'var(--red)';
+      }
     });
   }
 

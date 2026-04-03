@@ -192,16 +192,36 @@
 
       <hr class="sep" />
 
+      <!-- Status Change -->
+      <div class="section-label">status</div>
+      <div class="btn-row">
+        ${show.status !== 'completed' ? `<button class="btn" id="mark-complete-btn" style="font-size:.72rem; padding:.4rem .8rem;">Mark as completed</button>` : ''}
+        ${show.status === 'draft' ? `<button class="btn btn-orange" id="mark-announced-btn" style="font-size:.72rem; padding:.4rem .8rem;">Mark as announced</button>` : ''}
+      </div>
+      <div id="status-flash" class="flash"></div>
+
+      <hr class="sep" />
+
       <!-- Navigation -->
       <div class="section-label">actions</div>
       <div class="btn-row">
         <button class="btn btn-dim" onclick="window.location.href='admin.html?edit=${showId}'" style="font-size:.72rem; padding:.4rem .8rem;">&#9998; Edit show</button>
         <a href="${checkinLink}" class="btn btn-dim" style="font-size:.72rem; padding:.4rem .8rem; text-decoration:none;">&#10003; Guest check-in</a>
+        <button class="btn" id="delete-show-btn" style="font-size:.72rem; padding:.4rem .8rem; border-color:var(--red); color:var(--red);">&#10005; Delete show</button>
       </div>
     `;
 
     // Load lineup
     loadLineup();
+
+    // Status buttons
+    const markCompleteBtn = document.getElementById('mark-complete-btn');
+    if (markCompleteBtn) markCompleteBtn.addEventListener('click', () => changeStatus('completed'));
+    const markAnnouncedBtn = document.getElementById('mark-announced-btn');
+    if (markAnnouncedBtn) markAnnouncedBtn.addEventListener('click', () => changeStatus('announced'));
+
+    // Delete button
+    document.getElementById('delete-show-btn').addEventListener('click', deleteShow);
 
     // Wire up buttons
     document.getElementById('save-dayof-btn').addEventListener('click', saveDayOf);
@@ -213,6 +233,38 @@
     // Pre-fill day-of message with venue if empty
     if (!show.day_of_message) {
       preFillVenue();
+    }
+  }
+
+  async function changeStatus(newStatus) {
+    if (!confirm(`Change show status to "${newStatus}"?`)) return;
+    try {
+      const res = await fetch(`${API}/admin-shows`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ id: showId, status: newStatus }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      flash('status-flash', `Status changed to ${newStatus}`, 'ok');
+      setTimeout(() => location.reload(), 1000);
+    } catch (err) {
+      flash('status-flash', err.message, 'err');
+    }
+  }
+
+  async function deleteShow() {
+    if (!confirm('Are you sure you want to delete this show? This cannot be undone.')) return;
+    if (!confirm('REALLY delete? All bookings, orders, and comedian links will be removed.')) return;
+    try {
+      const res = await fetch(`${API}/admin-shows`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ id: showId }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      window.location.href = 'admin.html';
+    } catch (err) {
+      alert(err.message);
     }
   }
 
