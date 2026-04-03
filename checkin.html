@@ -574,18 +574,12 @@
       ${controlsHTML}
     `;
 
-    // +/- buttons
+    // +/- buttons (no confirmation needed, just increment/decrement)
     row.querySelectorAll('.qty-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const dir = parseInt(btn.dataset.dir);
         const newCount = Math.max(0, Math.min(g.quantity, g.checked_in_count + dir));
-        if (newCount < g.checked_in_count) {
-          // Decreasing — show undo confirm
-          undoId = g.id;
-          renderGuests();
-        } else {
-          updateCheckin(g.id, newCount);
-        }
+        updateCheckin(g.id, newCount);
       });
     });
 
@@ -635,9 +629,8 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      const guest = guests.find(g => g.id === orderId);
-      if (guest) guest.checked_in_count = count;
-      renderGuests();
+      // Re-fetch from server to ensure accurate counts
+      await searchGuests(document.getElementById('search-input').value);
     } catch (err) {
       alert(err.message);
     }
