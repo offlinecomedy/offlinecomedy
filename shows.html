@@ -567,7 +567,12 @@
           <div class="row loc">             <em>${t.show.venue.city}, ${t.show.venue.state} ${t.show.venue.zip_code}</em></div>
         </div>`;
     } else if (!t.show.is_past && !t.show.location_revealed) {
-      venueHTML = `<div class="row">LOCATION ..... <em>CLASSIFIED</em> <span style="font-size:.64rem;color:var(--green-dim)">// 24hrs before show</span></div>`;
+      const revealId = 'reveal-' + t.order_id;
+      venueHTML = `
+        <div class="row">LOCATION ..... <em>CLASSIFIED</em></div>
+        <div class="row" style="font-size:.72rem; color:var(--yellow);" id="${revealId}"></div>`;
+      // Queue countdown
+      setTimeout(() => startRevealCountdown(revealId, t.show.date, t.show.show_time), 0);
     }
 
     let comediansHTML = '';
@@ -641,6 +646,51 @@
         }
       });
     }
+  }
+
+  // ── REVEAL COUNTDOWN ──
+  function startRevealCountdown(elId, showDate, showTime) {
+    const el = document.getElementById(elId);
+    if (!el || !showDate || !showTime) return;
+
+    const [mm, dd, yyyy] = showDate.split('.');
+    const match = showTime.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return;
+
+    let hours = parseInt(match[1]);
+    const mins = parseInt(match[2]);
+    if (match[3].toUpperCase() === 'PM' && hours < 12) hours += 12;
+    if (match[3].toUpperCase() === 'AM' && hours === 12) hours = 0;
+
+    const showDateTime = new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd), hours, mins);
+    const revealTime = new Date(showDateTime.getTime() - 24 * 60 * 60 * 1000);
+
+    function tick() {
+      const now = new Date();
+      const diff = revealTime - now;
+
+      if (diff <= 0) {
+        el.innerHTML = '<em style="color:var(--yellow)">LOCATION REVEALED — REFRESH TO VIEW</em>';
+        return;
+      }
+
+      const days = Math.floor(diff / 86400000);
+      const hrs  = Math.floor((diff % 86400000) / 3600000);
+      const mns  = Math.floor((diff % 3600000) / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+
+      let display;
+      if (days > 0) {
+        display = `${days}d ${String(hrs).padStart(2,'0')}h ${String(mns).padStart(2,'0')}m ${String(secs).padStart(2,'0')}s`;
+      } else {
+        display = `${String(hrs).padStart(2,'0')}h ${String(mns).padStart(2,'0')}m ${String(secs).padStart(2,'0')}s`;
+      }
+
+      el.textContent = `REVEALS IN   ${display}`;
+    }
+
+    tick();
+    setInterval(tick, 1000);
   }
 
   // ── BOOT SEQUENCE ──
