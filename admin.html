@@ -327,6 +327,12 @@
           </div>
         </div>
 
+        <!-- Day-of Message -->
+        <div class="form-group">
+          <label class="form-label" for="s-day-msg"><em>DAY-OF MESSAGE</em>  // sent to ticket holders 24hrs before show</label>
+          <textarea id="s-day-msg" placeholder="Hey! Here are your show details for tonight..." style="background:#0a0a0a; border:1px solid var(--green-dark); color:var(--green); font-family:inherit; font-size:.82rem; width:100%; padding:.5rem; min-height:80px; resize:vertical; outline:none;"></textarea>
+        </div>
+
         <!-- Notify ZIPs -->
         <div class="form-group">
           <label class="form-label" for="s-zips"><em>NOTIFY_ZIPS</em>  // auto-filled from location zip</label>
@@ -478,6 +484,11 @@
                   ? `<button class="btn yellow-btn" onclick="announceShow('${show.id}', '${show.city}')">&#9654; Announce</button>`
                   : ''}
                 <button class="btn" onclick="startEdit('${show.id}')" style="font-size:.72rem;padding:.4rem .8rem;border-color:var(--green-dim);color:var(--green-dim)">&#9998; Edit</button>
+                ${show.day_of_message && !show.day_of_sent
+                  ? `<button class="btn" onclick="sendDayOf('${show.id}', '${show.city}')" style="font-size:.72rem;padding:.4rem .8rem;border-color:#ff8c00;color:#ff8c00">&#9993; Send Day-Of</button>`
+                  : show.day_of_sent
+                  ? `<span style="font-size:.68rem;color:var(--green-dim)">&#10003; Day-of sent</span>`
+                  : ''}
               </div>
             </td>
           </tr>`;
@@ -488,6 +499,25 @@
 
     } catch (err) {
       container.innerHTML = `<div class="ln red">$ error: ${err.message}</div>`;
+    }
+  }
+
+  // ── Send Day-Of Message ──────────────────────────────────────────────────
+  async function sendDayOf(showId, city) {
+    if (!confirm(`Send day-of message to all ticket holders for ${city}?`)) return;
+
+    try {
+      const res = await fetch(`${API}/send-day-of`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ show_id: showId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      flash('main-flash', `Day-of message sent to ${data.sent} ticket holder(s)!`, 'ok');
+      loadShows();
+    } catch (err) {
+      flash('main-flash', err.message, 'err');
     }
   }
 
@@ -699,6 +729,7 @@
     document.getElementById('s-age').value        = show.age_requirement || '';
     document.getElementById('s-drinks').value     = show.drinks         || '';
     document.getElementById('s-status').value     = show.status         || 'draft';
+    document.getElementById('s-day-msg').value    = show.day_of_message || '';
 
     // Venue
     if (show.venue_id) {
@@ -748,6 +779,7 @@
     const capacity   = parseInt(document.getElementById('s-capacity').value) || null;
     const venueId    = document.getElementById('s-venue-id').value || null;
     const comedianIds = JSON.parse(document.getElementById('s-comedian-ids').value || '[]');
+    const dayOfMessage = document.getElementById('s-day-msg').value.trim();
 
     if (!date || !city || !locZip || !zipCodes.length) {
       flash('main-flash', 'Date, city, location zip, and notify zips are required.', 'err');
@@ -772,6 +804,7 @@
         capacity,
         venue_id:           venueId,
         comedian_ids:       comedianIds,
+        day_of_message:     dayOfMessage || null,
       };
       if (editShowId) payload.id = editShowId;
 
@@ -786,7 +819,7 @@
       flash('main-flash', editShowId ? `Show updated: ${city} on ${date}` : `Show created: ${city} on ${date}`, 'ok');
       exitEdit();
       // Reset form
-      ['s-date','s-city','s-loc-zip','s-zips','s-price','s-time','s-capacity',
+      ['s-date','s-city','s-loc-zip','s-zips','s-price','s-time','s-capacity','s-day-msg',
        's-venue-search','s-venue-id','v-name','v-address','v-city','v-zip'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
