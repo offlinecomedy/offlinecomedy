@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — COMEDIAN PORTAL</title>
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="https://js.stripe.com/v3/connect.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff41; --green-dim:#00b32c; --green-dark:#003b0f; --yellow:#ffd700; --red:#ff4444; --bg:#050505; }
+    body { background:var(--bg); color:var(--green); font-family:'Share Tech Mono','Courier New',monospace; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:2rem 1rem; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,rgba(0,255,65,.025) 0px,rgba(0,255,65,.025) 1px,transparent 1px,transparent 2px); pointer-events:none; z-index:999; }
+    .terminal { width:100%; max-width:700px; border:1px solid var(--green-dim); border-radius:4px; box-shadow:0 0 24px rgba(0,255,65,.18); overflow:hidden; }
+    .terminal-bar { background:var(--green-dark); border-bottom:1px solid var(--green-dim); padding:8px 14px; display:flex; align-items:center; gap:10px; }
+    .dots { display:flex; gap:6px; }
+    .dot { width:11px; height:11px; border-radius:50%; background:var(--green-dim); opacity:.45; }
+    .terminal-title { flex:1; text-align:center; font-size:.68rem; color:var(--green-dim); letter-spacing:.18em; }
+    .terminal-body { padding:1.4rem 1.6rem 2rem; background:var(--bg); }
+    .ln { font-size:.82rem; line-height:1.65; }
+    .dim { color:var(--green-dim); }
+    .bright { color:var(--green); text-shadow:0 0 8px rgba(0,255,65,.55); }
+    .yellow { color:var(--yellow); }
+    .sep { border:none; border-top:1px solid var(--green-dark); margin:1rem 0; }
+    .row { font-size:.78rem; line-height:1.9; color:var(--green-dim); }
+    .row em { color:var(--green); font-style:normal; }
+    .section-label { font-size:.72rem; color:var(--green-dim); letter-spacing:.15em; margin:1rem 0 .4rem; text-transform:uppercase; }
+    .input-row { display:flex; align-items:center; border:1px solid var(--green-dark); background:#0a0a0a; transition:border-color .2s; }
+    .input-row:focus-within { border-color:var(--green); box-shadow:0 0 10px rgba(0,255,65,.2); }
+    .input-pfx { padding:.5rem .65rem; color:var(--green-dim); font-size:.85rem; }
+    input[type="text"], input[type="email"] { background:transparent; border:none; outline:none; color:var(--green); font-family:inherit; font-size:.88rem; width:100%; padding:.5rem .5rem .5rem 0; }
+    input::placeholder { color:#1c4827; }
+    .btn { background:transparent; border:1px solid var(--green); color:var(--green); font-family:inherit; font-size:.8rem; padding:.55rem 1rem; cursor:pointer; letter-spacing:.15em; text-transform:uppercase; width:100%; transition:background .18s, color .18s; }
+    .btn:hover { background:var(--green); color:#000; }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-sm { font-size:.72rem; padding:.4rem .8rem; width:auto; }
+    .flash { font-size:.76rem; padding:.4rem .7rem; border:1px solid; margin:.5rem 0; display:none; }
+    .flash.err { border-color:var(--red); color:var(--red); }
+    .flash.ok { border-color:var(--green); color:var(--green); }
+    .flash.show { display:block; }
+    .stat-row { display:flex; gap:1.5rem; flex-wrap:wrap; margin:.6rem 0; }
+    .stat { font-size:.74rem; color:var(--green-dim); }
+    .stat em { color:var(--green); font-style:normal; font-size:.88rem; }
+    .stat em.yellow { color:var(--yellow); }
+    .booking-card { border:1px solid var(--green-dark); padding:.5rem .7rem; margin-bottom:.4rem; background:rgba(0,255,65,.02); }
+    .booking-card.cancelled { opacity:.5; }
+    .badge { display:inline-block; font-size:.64rem; padding:.1rem .35rem; border:1px solid; border-radius:2px; margin-left:.4rem; }
+    .badge.paid { border-color:var(--green); color:var(--green); }
+    .badge.unpaid { border-color:var(--yellow); color:var(--yellow); }
+    .badge.pending { border-color:var(--yellow); color:var(--yellow); }
+    .onboard-status { padding:.6rem .8rem; border:1px solid; margin:.5rem 0; font-size:.76rem; }
+    .onboard-status.complete { border-color:var(--green); color:var(--green); }
+    .onboard-status.pending { border-color:var(--yellow); color:var(--yellow); }
+    .onboard-status.not_started { border-color:var(--red); color:var(--red); }
+    #login-section, #code-section, #portal-section { display:none; }
+    .logout-link { font-size:.7rem; color:var(--green-dim); cursor:pointer; text-decoration:underline; margin-left:1rem; }
+    .logout-link:hover { color:var(--red); }
+    .cur { display:inline-block; width:8px; height:.9em; background:var(--green); vertical-align:text-bottom; animation:blink 1s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+    #stripe-onboard-container { margin-top:.5rem; min-height:100px; }
+  </style>
+</head>
+<body>
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — comedian_portal.enc</div>
+  </div>
+  <div class="terminal-body">
+
+    <!-- Login -->
+    <div id="login-section">
+      <div class="ln bright" style="margin-bottom:1rem">[ COMEDIAN PORTAL ]</div>
+      <div class="ln dim" style="margin-bottom:1rem">Log in with the email on file with Offline Comedy.</div>
+      <div id="login-flash" class="flash err"></div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="email" id="login-email" placeholder="your@email.com" />
+        </div>
+      </div>
+      <button class="btn" id="send-code-btn">Send verification code</button>
+    </div>
+
+    <!-- Code -->
+    <div id="code-section">
+      <div class="ln bright" style="margin-bottom:1rem">[ ENTER CODE ]</div>
+      <div class="ln dim" id="code-msg" style="margin-bottom:1rem"></div>
+      <div id="code-flash" class="flash err"></div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="text" id="code-input" placeholder="000000" maxlength="6" inputmode="numeric" />
+        </div>
+      </div>
+      <button class="btn" id="verify-btn">Verify</button>
+    </div>
+
+    <!-- Portal -->
+    <div id="portal-section">
+      <div style="display:flex; align-items:center;">
+        <div class="ln bright" id="portal-greeting"></div>
+        <span class="logout-link" id="logout-btn">logout</span>
+      </div>
+
+      <hr class="sep" />
+      <div class="stat-row" id="stats"></div>
+
+      <hr class="sep" />
+      <div class="section-label">payment setup (1099)</div>
+      <div id="onboard-section"></div>
+
+      <hr class="sep" />
+      <div class="section-label">bookings</div>
+      <div id="bookings-list"></div>
+    </div>
+
+    <div style="margin-top:1.4rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api';
+  const STRIPE_PK = 'pk_test_51R47ynCmQIUwwAkxngT1Pu5hDJCmeDJPY92QamPNcKqJZcs25wvS1y1UvPWerNWzWCJ6bFKY8CaWsRmYhNnxOqb500q0GRNoEw';
+
+  let comedianToken = localStorage.getItem('comedian_token');
+  let comedianEmail = '';
+  let comedianData = null;
+
+  function flashEl(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = '$ ' + msg;
+    el.className = `flash ${type || 'err'} show`;
+  }
+
+  // ── LOGIN ──
+  document.getElementById('send-code-btn').addEventListener('click', sendCode);
+  document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') sendCode(); });
+
+  async function sendCode() {
+    const email = document.getElementById('login-email').value.trim();
+    if (!email) return;
+
+    const btn = document.getElementById('send-code-btn');
+    btn.disabled = true; btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch(`${API}/comedian-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'send_code', email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      comedianEmail = email;
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('code-section').style.display = 'block';
+      document.getElementById('code-msg').textContent = `Code sent to phone ending in ${data.phone_last4}`;
+      document.getElementById('code-input').focus();
+
+      document.getElementById('verify-btn').addEventListener('click', verifyCode);
+      document.getElementById('code-input').addEventListener('keydown', e => { if (e.key === 'Enter') verifyCode(); });
+    } catch (err) {
+      flashEl('login-flash', err.message);
+      btn.disabled = false; btn.textContent = '> Send verification code';
+    }
+  }
+
+  async function verifyCode() {
+    const code = document.getElementById('code-input').value.trim();
+    if (!code || code.length !== 6) return;
+
+    const btn = document.getElementById('verify-btn');
+    btn.disabled = true; btn.textContent = 'Verifying...';
+
+    try {
+      const res = await fetch(`${API}/comedian-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', email: comedianEmail, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      comedianToken = data.token;
+      localStorage.setItem('comedian_token', comedianToken);
+      loadPortal();
+    } catch (err) {
+      flashEl('code-flash', err.message);
+      btn.disabled = false; btn.textContent = '> Verify';
+    }
+  }
+
+  // ── PORTAL ──
+  async function loadPortal() {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('code-section').style.display = 'none';
+    document.getElementById('portal-section').style.display = 'block';
+
+    try {
+      const res = await fetch(`${API}/comedian-portal`, {
+        headers: { 'x-comedian-token': comedianToken },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 401) {
+          localStorage.removeItem('comedian_token');
+          comedianToken = null;
+          document.getElementById('portal-section').style.display = 'none';
+          document.getElementById('login-section').style.display = 'block';
+          return;
+        }
+        throw new Error(data.error);
+      }
+
+      comedianData = data;
+      renderPortal();
+    } catch (err) {
+      document.getElementById('portal-section').innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
+    }
+  }
+
+  function renderPortal() {
+    const { comedian, bookings, stats } = comedianData;
+
+    document.getElementById('portal-greeting').textContent = `[ ${comedian.name.toUpperCase()} ]`;
+
+    // Stats
+    document.getElementById('stats').innerHTML = `
+      <div class="stat">SHOWS<br><em>${stats.shows_performed}</em></div>
+      <div class="stat">EARNED<br><em>$${(stats.total_earned_cents / 100).toLocaleString()}</em></div>
+      <div class="stat">PAID<br><em>$${(stats.total_paid_cents / 100).toLocaleString()}</em></div>
+      <div class="stat">OUTSTANDING<br><em class="${stats.outstanding_cents > 0 ? 'yellow' : ''}">$${(stats.outstanding_cents / 100).toLocaleString()}</em></div>
+      <div class="stat">UPCOMING<br><em>${stats.upcoming_shows}</em></div>
+    `;
+
+    // Onboarding
+    renderOnboarding(comedian);
+
+    // Bookings
+    renderBookings(bookings);
+  }
+
+  function renderOnboarding(comedian) {
+    const el = document.getElementById('onboard-section');
+    const status = comedian.onboarding_status || 'not_started';
+
+    if (status === 'complete') {
+      el.innerHTML = `<div class="onboard-status complete">&#10003; 1099 setup complete — you're ready to receive payments</div>`;
+      return;
+    }
+
+    if (status === 'pending') {
+      el.innerHTML = `
+        <div class="onboard-status pending">&#9888; Onboarding started but not complete</div>
+        <button class="btn btn-sm" id="continue-onboard-btn" style="margin-top:.5rem;">Continue setup</button>
+        <div id="stripe-onboard-container"></div>
+      `;
+    } else {
+      el.innerHTML = `
+        <div class="onboard-status not_started">&#9888; Payment setup required to receive payouts</div>
+        <div class="ln dim" style="font-size:.72rem; margin:.4rem 0;">Complete your tax info and bank details to get paid directly.</div>
+        <button class="btn btn-sm" id="start-onboard-btn" style="margin-top:.3rem;">Setup payment account</button>
+        <div id="stripe-onboard-container"></div>
+      `;
+    }
+
+    const btn = document.getElementById('start-onboard-btn') || document.getElementById('continue-onboard-btn');
+    if (btn) {
+      btn.addEventListener('click', startOnboarding);
+    }
+  }
+
+  async function startOnboarding() {
+    const container = document.getElementById('stripe-onboard-container');
+    container.innerHTML = '<div class="ln dim">Loading Stripe onboarding...</div>';
+
+    try {
+      const res = await fetch(`${API}/connect-onboard`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-comedian-token': comedianToken },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      // Initialize Stripe Connect embedded onboarding
+      const stripeConnectInstance = loadConnectAndInitialize({
+        publishableKey: STRIPE_PK,
+        fetchClientSecret: async () => data.client_secret,
+      });
+
+      const onboardingComponent = stripeConnectInstance.create('account-onboarding');
+      onboardingComponent.setOnExit(() => {
+        // Check status after they finish
+        checkOnboardingStatus();
+      });
+
+      container.innerHTML = '';
+      container.appendChild(onboardingComponent);
+
+    } catch (err) {
+      container.innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
+    }
+  }
+
+  async function checkOnboardingStatus() {
+    try {
+      const res = await fetch(`${API}/connect-status?comedian_id=${comedianData.comedian.id}`, {
+        headers: { 'x-comedian-token': comedianToken },
+      });
+      const data = await res.json();
+      if (data.status === 'complete') {
+        comedianData.comedian.onboarding_status = 'complete';
+        renderOnboarding(comedianData.comedian);
+      }
+    } catch {}
+  }
+
+  function renderBookings(bookings) {
+    const el = document.getElementById('bookings-list');
+
+    const upcoming = bookings.filter(b => b.shows && b.shows.status !== 'completed' && b.status !== 'cancelled');
+    const past = bookings.filter(b => b.shows && b.shows.status === 'completed');
+    const cancelled = bookings.filter(b => b.status === 'cancelled');
+
+    let html = '';
+
+    if (upcoming.length > 0) {
+      html += '<div style="font-size:.68rem; color:var(--yellow); margin-bottom:.3rem;">UPCOMING</div>';
+      upcoming.forEach(b => { html += bookingHTML(b); });
+    }
+
+    if (past.length > 0) {
+      html += '<div style="font-size:.68rem; color:var(--green-dim); margin:.6rem 0 .3rem;">PAST</div>';
+      past.forEach(b => { html += bookingHTML(b); });
+    }
+
+    if (bookings.length === 0) {
+      html = '<div class="ln dim">$ no bookings yet</div>';
+    }
+
+    el.innerHTML = html;
+  }
+
+  function bookingHTML(b) {
+    const show = b.shows;
+    const rate = b.rate_cents ? '$' + (b.rate_cents / 100).toFixed(0) : '';
+    const payBadge = b.payment_status === 'paid'
+      ? '<span class="badge paid">PAID</span>'
+      : rate ? '<span class="badge unpaid">UNPAID</span>' : '';
+
+    return `
+      <div class="booking-card${b.status === 'cancelled' ? ' cancelled' : ''}">
+        <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+          <span style="color:var(--yellow); font-size:.78rem;">${show ? show.date : '—'}</span>
+          <span style="color:var(--green); font-size:.78rem;">${show ? show.city : '—'}</span>
+          <span style="font-size:.68rem; color:var(--green-dim); margin-left:auto;">${b.title || ''}</span>
+          ${payBadge}
+        </div>
+        <div style="font-size:.7rem; color:var(--green-dim); margin-top:.2rem;">
+          ${rate ? `RATE: <em style="color:var(--green)">${rate}</em>` : ''}
+          ${b.set_minutes ? ` &middot; SET: <em style="color:var(--green)">${b.set_minutes}min</em>` : ''}
+          ${b.rating ? ` &middot; RATING: <em style="color:var(--green)">${b.rating}/5</em>` : ''}
+        </div>
+      </div>`;
+  }
+
+  // Logout
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    localStorage.removeItem('comedian_token');
+    comedianToken = null;
+    document.getElementById('portal-section').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+  });
+
+  // Init
+  if (comedianToken) {
+    loadPortal();
+  } else {
+    document.getElementById('login-section').style.display = 'block';
+  }
+</script>
+</body>
+</html>
