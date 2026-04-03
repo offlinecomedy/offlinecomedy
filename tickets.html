@@ -360,7 +360,7 @@
         ${show.age_requirement ? `<div class="row">AGE .......... <em>${show.age_requirement}</em></div>` : ''}
         ${show.drinks ? `<div class="row">DRINKS ....... <em>${show.drinks.replace('_', ' ')}</em></div>` : ''}
         <div class="row">LOCATION ..... <em>CLASSIFIED</em> <span style="font-size:.68rem;color:var(--green-dim)">// revealed 24hrs prior</span></div>
-        ${remaining !== null ? `<div class="row${soldOut ? ' sold-out' : ''}">REMAINING .... <em>${soldOut ? 'SOLD OUT' : remaining + ' tickets'}</em></div>` : ''}
+        ${remaining !== null ? `<div class="row${soldOut ? ' sold-out' : ''}" id="remaining-row">REMAINING .... <em id="remaining-count">${soldOut ? 'SOLD OUT' : remaining + ' tickets'}</em></div>` : ''}
       `;
 
       if (soldOut) {
@@ -436,6 +436,25 @@
         document.getElementById('confirmation').style.display = 'block';
         document.getElementById('confirm-details').innerHTML =
           `${quantity} ticket${quantity > 1 ? 's' : ''} for ${show.date} — ${show.city}`;
+
+        // Tick down remaining count one by one
+        if (remaining !== null) {
+          const countEl = document.getElementById('remaining-count');
+          const target = remaining - quantity;
+          let current = remaining;
+          const tick = () => {
+            if (current <= target) {
+              countEl.textContent = target <= 0 ? 'SOLD OUT' : target + ' tickets';
+              return;
+            }
+            current--;
+            countEl.textContent = current + ' tickets';
+            countEl.style.textShadow = '0 0 12px rgba(0,255,65,.8)';
+            setTimeout(() => { countEl.style.textShadow = ''; }, 120);
+            setTimeout(tick, 180);
+          };
+          setTimeout(tick, 600);
+        }
 
         // Save name/email to localStorage for future use
         localStorage.setItem('oc_phone', phone);
