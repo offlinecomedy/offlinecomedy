@@ -332,6 +332,10 @@
     }
   });
 
+  // Pre-fill phone from localStorage
+  const savedPhone = localStorage.getItem('oc_phone');
+  if (savedPhone) document.getElementById('phone-input').value = savedPhone;
+
   loadShow();
 </script>
 </body>

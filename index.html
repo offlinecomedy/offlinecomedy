@@ -537,7 +537,9 @@
       });
       if (res.ok) {
         const data = await res.json();
-        const zip  = document.getElementById('zip').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const zip   = document.getElementById('zip').value.trim();
+        localStorage.setItem('oc_phone', phone);
         const welcome = data.isNew ? 'new' : 'returning';
         window.location.href = `shows.html?zip=${encodeURIComponent(zip)}&welcome=${welcome}`;
       } else {
