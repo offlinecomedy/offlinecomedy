@@ -485,6 +485,16 @@
     });
   }
 
+  // Auto-redirect returning guests
+  (function() {
+    const savedPhone = localStorage.getItem('oc_phone');
+    const savedZip   = localStorage.getItem('oc_zip');
+    if (savedPhone && savedZip) {
+      window.location.href = `shows.html?zip=${encodeURIComponent(savedZip)}&welcome=returning&tickets=1`;
+      return;
+    }
+  })();
+
   async function runBoot() {
     let prev = 0;
 
@@ -539,6 +549,7 @@
         const phone = document.getElementById('phone').value.trim();
         const zip   = document.getElementById('zip').value.trim();
         localStorage.setItem('oc_phone', phone);
+        localStorage.setItem('oc_zip', zip);
         const welcome = data.isNew ? 'new' : 'returning';
         const ticketParam = data.hasTickets ? '&tickets=1' : '';
         window.location.href = `shows.html?zip=${encodeURIComponent(zip)}&welcome=${welcome}${ticketParam}`;
