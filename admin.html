@@ -219,6 +219,7 @@
         <hr class="sep" />
         <div class="ln yellow" style="margin-bottom:1rem">[ CREATE SHOW ]</div>
 
+        <!-- Row: Date + City -->
         <div class="two-col">
           <div class="form-group">
             <label class="form-label" for="s-date"><em>DATE</em>  // e.g. 4.15.26</label>
@@ -228,14 +229,33 @@
             </div>
           </div>
           <div class="form-group">
+            <label class="form-label" for="s-time"><em>SHOW_TIME</em>  // e.g. 8:00 PM</label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <input type="text" id="s-time" placeholder="8:00 PM" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Row: City + Capacity -->
+        <div class="two-col">
+          <div class="form-group">
             <label class="form-label" for="s-city"><em>CITY</em></label>
             <div class="input-row">
               <span class="input-pfx">$&gt;</span>
               <input type="text" id="s-city" placeholder="Turlock" />
             </div>
           </div>
+          <div class="form-group">
+            <label class="form-label" for="s-capacity"><em>CAPACITY</em></label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <input type="number" id="s-capacity" placeholder="75" min="1" />
+            </div>
+          </div>
         </div>
 
+        <!-- Row: Location ZIP + Ticket Price -->
         <div class="two-col">
           <div class="form-group">
             <label class="form-label" for="s-loc-zip"><em>LOCATION_ZIP</em>  // notify zips auto-fill</label>
@@ -254,24 +274,127 @@
           </div>
         </div>
 
+        <!-- Row: Venue type + Age -->
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label" for="s-venue-type"><em>VENUE_TYPE</em></label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <select id="s-venue-type">
+                <option value="">— select —</option>
+                <option value="indoor">Indoor</option>
+                <option value="outdoor">Outdoor</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-age"><em>AGE_REQUIREMENT</em></label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <select id="s-age">
+                <option value="">— select —</option>
+                <option value="all_ages">All Ages</option>
+                <option value="18+">18+</option>
+                <option value="21+">21+</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Row: Drinks + Status -->
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label" for="s-drinks"><em>DRINKS</em></label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <select id="s-drinks">
+                <option value="">— select —</option>
+                <option value="byob">BYOB</option>
+                <option value="for_sale">For Sale</option>
+                <option value="not_available">Not Available</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-status"><em>STATUS</em></label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <select id="s-status">
+                <option value="draft">draft</option>
+                <option value="announced">announced</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notify ZIPs -->
         <div class="form-group">
-          <label class="form-label" for="s-zips"><em>NOTIFY_ZIPS</em>  // comma-separated, who gets the SMS blast</label>
+          <label class="form-label" for="s-zips"><em>NOTIFY_ZIPS</em>  // auto-filled from location zip</label>
           <div class="input-row">
             <span class="input-pfx">$&gt;</span>
             <input type="text" id="s-zips" placeholder="95380, 95382, 95351" />
           </div>
         </div>
 
+        <!-- Venue -->
         <div class="form-group">
-          <label class="form-label" for="s-status"><em>STATUS</em></label>
-          <div class="input-row">
-            <span class="input-pfx">$&gt;</span>
-            <select id="s-status">
-              <option value="draft">draft</option>
-              <option value="announced">announced</option>
-            </select>
+          <label class="form-label"><em>VENUE</em>  // search existing or create new</label>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <div class="input-row" style="flex:1">
+              <span class="input-pfx">$&gt;</span>
+              <input type="text" id="s-venue-search" placeholder="search venue name..." autocomplete="off" />
+            </div>
+            <button type="button" class="btn" id="venue-search-btn" style="white-space:nowrap;padding:.5rem .9rem;font-size:.75rem">Search</button>
+          </div>
+          <div id="venue-results" style="margin-top:.4rem"></div>
+          <input type="hidden" id="s-venue-id" />
+          <div id="venue-selected" style="font-size:.75rem;color:var(--green);margin-top:.3rem;min-height:1rem"></div>
+
+          <!-- Create new venue (hidden by default) -->
+          <div id="new-venue-form" style="display:none;margin-top:.8rem;border-left:1px solid var(--green-dark);padding-left:1rem">
+            <div class="ln dim" style="margin-bottom:.6rem;font-size:.74rem">// new venue</div>
+            <div class="two-col">
+              <div class="form-group">
+                <label class="form-label" for="v-name"><em>NAME</em></label>
+                <div class="input-row"><span class="input-pfx">$&gt;</span><input type="text" id="v-name" placeholder="The Burbank" /></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="v-city"><em>CITY</em></label>
+                <div class="input-row"><span class="input-pfx">$&gt;</span><input type="text" id="v-city" placeholder="Turlock" /></div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="v-address"><em>ADDRESS</em></label>
+              <div class="input-row"><span class="input-pfx">$&gt;</span><input type="text" id="v-address" placeholder="123 Main St" /></div>
+            </div>
+            <div class="two-col">
+              <div class="form-group">
+                <label class="form-label" for="v-zip"><em>ZIP</em></label>
+                <div class="input-row"><span class="input-pfx">$&gt;</span><input type="text" id="v-zip" placeholder="95380" maxlength="10" /></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="v-state"><em>STATE</em></label>
+                <div class="input-row"><span class="input-pfx">$&gt;</span><input type="text" id="v-state" placeholder="CA" maxlength="2" /></div>
+              </div>
+            </div>
+            <button type="button" class="btn yellow-btn" id="create-venue-btn">+ Save Venue</button>
           </div>
         </div>
+
+        <!-- Comedians -->
+        <div class="form-group">
+          <label class="form-label"><em>COMEDIANS</em>  // add lineup</label>
+          <div style="display:flex;gap:.6rem;align-items:center">
+            <div class="input-row" style="flex:1;position:relative">
+              <span class="input-pfx">$&gt;</span>
+              <input type="text" id="s-comedian-search" placeholder="search or add by name..." autocomplete="off" />
+            </div>
+            <button type="button" class="btn" id="comedian-search-btn" style="white-space:nowrap;padding:.5rem .9rem;font-size:.75rem">Add</button>
+          </div>
+          <div id="comedian-results" style="margin-top:.4rem"></div>
+          <div id="comedian-tags" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.5rem"></div>
+        </div>
+        <input type="hidden" id="s-comedian-ids" value="[]" />
 
         <button class="btn full" id="create-show-btn">Create Show</button>
       </div>
@@ -378,15 +501,178 @@
     }
   }
 
+  // ── Venue search & create ─────────────────────────────────────────────────
+  let allVenues = [];
+
+  async function loadVenues() {
+    try {
+      const res  = await fetch(`${API}/admin-venues`, { headers: { 'x-admin-key': adminKey } });
+      allVenues  = await res.json();
+    } catch (_) {}
+  }
+
+  function selectVenue(venue) {
+    document.getElementById('s-venue-id').value   = venue.id;
+    document.getElementById('venue-selected').textContent = `✓ ${venue.name} — ${venue.address}`;
+    document.getElementById('venue-results').innerHTML = '';
+    document.getElementById('s-venue-search').value = venue.name;
+    document.getElementById('new-venue-form').style.display = 'none';
+  }
+
+  document.getElementById('venue-search-btn').addEventListener('click', () => {
+    const q = document.getElementById('s-venue-search').value.trim().toLowerCase();
+    const matches = allVenues.filter(v => v.name.toLowerCase().includes(q));
+    const container = document.getElementById('venue-results');
+
+    if (!matches.length) {
+      container.innerHTML = `<div style="font-size:.74rem;color:var(--green-dim);margin-top:.3rem">
+        $ no match — <span style="color:var(--green);cursor:pointer;text-decoration:underline" id="show-new-venue">create new venue</span>
+      </div>`;
+      document.getElementById('show-new-venue').addEventListener('click', () => {
+        document.getElementById('new-venue-form').style.display = 'block';
+        document.getElementById('v-name').value = document.getElementById('s-venue-search').value;
+        container.innerHTML = '';
+      });
+      return;
+    }
+
+    container.innerHTML = matches.map(v =>
+      `<div class="venue-option" data-id="${v.id}" style="font-size:.76rem;padding:.3rem .5rem;cursor:pointer;color:var(--green-dim);border-left:2px solid var(--green-dark);margin-top:.2rem">
+        <span style="color:var(--green)">${v.name}</span> — ${v.address}, ${v.city || ''}
+      </div>`
+    ).join('');
+
+    container.querySelectorAll('.venue-option').forEach(el => {
+      el.addEventListener('click', () => {
+        const venue = allVenues.find(v => v.id === el.dataset.id);
+        if (venue) selectVenue(venue);
+      });
+    });
+  });
+
+  document.getElementById('create-venue-btn').addEventListener('click', async () => {
+    const name    = document.getElementById('v-name').value.trim();
+    const address = document.getElementById('v-address').value.trim();
+    const city    = document.getElementById('v-city').value.trim();
+    const zip     = document.getElementById('v-zip').value.trim();
+    const state   = document.getElementById('v-state').value.trim() || 'CA';
+
+    if (!name || !address) { flash('main-flash', 'Venue name and address required.', 'err'); return; }
+
+    try {
+      const res  = await fetch(`${API}/admin-venues`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body:    JSON.stringify({ name, address, city, state, zip_code: zip }),
+      });
+      const venue = await res.json();
+      if (!res.ok) throw new Error(venue.error);
+      allVenues.push(venue);
+      selectVenue(venue);
+      flash('main-flash', `Venue saved: ${venue.name}`, 'ok');
+    } catch (err) {
+      flash('main-flash', err.message, 'err');
+    }
+  });
+
+  // ── Comedian search & tag ─────────────────────────────────────────────────
+  let allComedians   = [];
+  let selectedComedians = []; // [{id, name}]
+
+  async function loadComedians() {
+    try {
+      const res   = await fetch(`${API}/admin-comedians`, { headers: { 'x-admin-key': adminKey } });
+      allComedians = await res.json();
+    } catch (_) {}
+  }
+
+  function renderComedianTags() {
+    const container = document.getElementById('comedian-tags');
+    container.innerHTML = selectedComedians.map(c =>
+      `<span style="font-size:.74rem;border:1px solid var(--green-dim);padding:.2rem .6rem;color:var(--green)">
+        ${c.name} <span style="cursor:pointer;color:var(--green-dim)" data-id="${c.id}">×</span>
+      </span>`
+    ).join('');
+    container.querySelectorAll('span[data-id]').forEach(el => {
+      el.addEventListener('click', () => {
+        selectedComedians = selectedComedians.filter(c => c.id !== el.dataset.id);
+        document.getElementById('s-comedian-ids').value = JSON.stringify(selectedComedians.map(c => c.id));
+        renderComedianTags();
+      });
+    });
+  }
+
+  function addComedian(comedian) {
+    if (selectedComedians.find(c => c.id === comedian.id)) return;
+    selectedComedians.push(comedian);
+    document.getElementById('s-comedian-ids').value = JSON.stringify(selectedComedians.map(c => c.id));
+    document.getElementById('comedian-results').innerHTML = '';
+    document.getElementById('s-comedian-search').value = '';
+    renderComedianTags();
+  }
+
+  document.getElementById('comedian-search-btn').addEventListener('click', async () => {
+    const q = document.getElementById('s-comedian-search').value.trim();
+    if (!q) return;
+
+    const matches = allComedians.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
+    const container = document.getElementById('comedian-results');
+
+    if (!matches.length) {
+      // Offer to create
+      container.innerHTML = `<div style="font-size:.74rem;color:var(--green-dim);margin-top:.3rem">
+        $ not found — <span style="color:var(--green);cursor:pointer;text-decoration:underline" id="create-comedian-now">add "${q}" as new comedian</span>
+      </div>`;
+      document.getElementById('create-comedian-now').addEventListener('click', async () => {
+        try {
+          const res  = await fetch(`${API}/admin-comedians`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+            body:    JSON.stringify({ name: q }),
+          });
+          const comedian = await res.json();
+          if (!res.ok) throw new Error(comedian.error);
+          allComedians.push(comedian);
+          addComedian(comedian);
+        } catch (err) {
+          flash('main-flash', err.message, 'err');
+        }
+      });
+      return;
+    }
+
+    container.innerHTML = matches.map(c =>
+      `<div class="comedian-option" data-id="${c.id}" style="font-size:.76rem;padding:.3rem .5rem;cursor:pointer;color:var(--green);border-left:2px solid var(--green-dark);margin-top:.2rem">${c.name}</div>`
+    ).join('');
+
+    container.querySelectorAll('.comedian-option').forEach(el => {
+      el.addEventListener('click', () => {
+        const c = allComedians.find(x => x.id === el.dataset.id);
+        if (c) addComedian(c);
+      });
+    });
+  });
+
+  document.getElementById('s-comedian-search').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('comedian-search-btn').click();
+  });
+
   // ── Create show ────────────────────────────────────────────────────────────
   document.getElementById('create-show-btn').addEventListener('click', async () => {
-    const date    = document.getElementById('s-date').value.trim();
-    const city    = document.getElementById('s-city').value.trim();
-    const locZip  = document.getElementById('s-loc-zip').value.trim();
-    const price   = parseFloat(document.getElementById('s-price').value) || 20;
-    const zipsRaw = document.getElementById('s-zips').value;
-    const status  = document.getElementById('s-status').value;
-    const zipCodes = zipsRaw.split(',').map(z => z.trim()).filter(Boolean);
+    const date       = document.getElementById('s-date').value.trim();
+    const city       = document.getElementById('s-city').value.trim();
+    const locZip     = document.getElementById('s-loc-zip').value.trim();
+    const price      = parseFloat(document.getElementById('s-price').value) || 20;
+    const zipsRaw    = document.getElementById('s-zips').value;
+    const status     = document.getElementById('s-status').value;
+    const zipCodes   = zipsRaw.split(',').map(z => z.trim()).filter(Boolean);
+    const showTime   = document.getElementById('s-time').value.trim();
+    const venueType  = document.getElementById('s-venue-type').value;
+    const age        = document.getElementById('s-age').value;
+    const drinks     = document.getElementById('s-drinks').value;
+    const capacity   = parseInt(document.getElementById('s-capacity').value) || null;
+    const venueId    = document.getElementById('s-venue-id').value || null;
+    const comedianIds = JSON.parse(document.getElementById('s-comedian-ids').value || '[]');
 
     if (!date || !city || !locZip || !zipCodes.length) {
       flash('main-flash', 'Date, city, location zip, and notify zips are required.', 'err');
@@ -403,21 +689,35 @@
         headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
         body:    JSON.stringify({
           date, city,
-          location_zip: locZip,
-          zip_codes: zipCodes,
+          location_zip:       locZip,
+          zip_codes:          zipCodes,
           ticket_price_cents: Math.round(price * 100),
           status,
+          show_time:          showTime   || null,
+          venue_type:         venueType  || null,
+          age_requirement:    age        || null,
+          drinks:             drinks     || null,
+          capacity,
+          venue_id:           venueId,
+          comedian_ids:       comedianIds,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
       flash('main-flash', `Show created: ${city} on ${date}`, 'ok');
-      document.getElementById('s-date').value  = '';
-      document.getElementById('s-city').value  = '';
-      document.getElementById('s-loc-zip').value = '';
-      document.getElementById('s-zips').value  = '';
-      document.getElementById('s-price').value = '';
+      // Reset form
+      ['s-date','s-city','s-loc-zip','s-zips','s-price','s-time','s-capacity',
+       's-venue-search','s-venue-id','v-name','v-address','v-city','v-zip'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      document.getElementById('venue-selected').textContent  = '';
+      document.getElementById('comedian-tags').innerHTML     = '';
+      document.getElementById('s-comedian-ids').value        = '[]';
+      document.getElementById('zip-radius-status').textContent = '';
+      document.getElementById('new-venue-form').style.display = 'none';
+      selectedComedians = [];
       document.getElementById('new-show-section').classList.remove('open');
       document.getElementById('toggle-new-show').classList.remove('active');
       loadShows();
@@ -468,6 +768,8 @@
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'block';
     loadShows();
+    loadVenues();
+    loadComedians();
   }
 
   async function authenticate() {
