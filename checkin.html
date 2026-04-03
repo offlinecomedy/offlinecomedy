@@ -190,6 +190,37 @@
     }
     .undo-confirm .undo-msg { font-size: .72rem; color: var(--red); flex: 1; min-width: 140px; }
 
+    /* Countdown */
+    .countdown {
+      text-align: center;
+      padding: .6rem;
+      border: 1px solid var(--green-dark);
+      background: rgba(0,255,65,.02);
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .countdown-label {
+      font-size: .68rem; color: var(--green-dim); letter-spacing: .15em;
+      margin-bottom: .25rem;
+    }
+    .countdown-time {
+      font-size: 1.4rem; color: var(--green);
+      text-shadow: 0 0 12px rgba(0,255,65,.5);
+      letter-spacing: .12em;
+    }
+    .countdown-time.soon {
+      color: var(--yellow);
+      text-shadow: 0 0 12px rgba(255,215,0,.5);
+    }
+    .countdown-time.live {
+      color: var(--green);
+      animation: pulse 1.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: .6; }
+    }
+
     #login-section, #checkin-section { display: none; }
 
     .cur {
@@ -245,6 +276,10 @@
       </div>
 
       <div id="show-panel" style="display:none">
+        <div class="countdown" id="countdown">
+          <div class="countdown-label">SHOWTIME IN</div>
+          <div class="countdown-time" id="countdown-time"></div>
+        </div>
         <div class="progress-wrap" id="progress-wrap"></div>
 
         <div class="form-group">
@@ -269,8 +304,10 @@
   let token       = sessionStorage.getItem('staff_token');
   let staffInfo   = JSON.parse(sessionStorage.getItem('staff_info') || 'null');
   let currentShowId = null;
+  let showsData   = [];
   let guests      = [];
-  let undoId      = null; // which order is showing undo confirmation
+  let undoId      = null;
+  let countdownInterval = null;
 
   function flashLogin(msg) {
     const el = document.getElementById('login-flash');
@@ -328,9 +365,9 @@
       const res = await fetch(`${API}/shows-list`, {
         headers: { 'x-staff-token': token },
       });
-      const shows = await res.json();
-      if (Array.isArray(shows)) {
-        shows.forEach(s => {
+      showsData = await res.json();
+      if (Array.isArray(showsData)) {
+        showsData.forEach(s => {
           const opt = document.createElement('option');
           opt.value = s.id;
           opt.textContent = `${s.date} — ${s.city}`;
@@ -347,11 +384,82 @@
     if (currentShowId) {
       document.getElementById('show-panel').style.display = 'block';
       document.getElementById('search-input').value = '';
+      startCountdown();
       searchGuests('');
     } else {
       document.getElementById('show-panel').style.display = 'none';
+      stopCountdown();
     }
   });
+
+  function parseShowDateTime(show) {
+    // date format: "04.25.2026", show_time: "8:00 PM"
+    if (!show.date || !show.show_time) return null;
+    const [mm, dd, yyyy] = show.date.split('.');
+    const timeStr = show.show_time.trim();
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return null;
+    let hours = parseInt(match[1]);
+    const mins = parseInt(match[2]);
+    const ampm = match[3].toUpperCase();
+    if (ampm === 'PM' && hours < 12) hours += 12;
+    if (ampm === 'AM' && hours === 12) hours = 0;
+    return new Date(parseInt(yyyy), parseInt(mm) - 1, parseInt(dd), hours, mins, 0);
+  }
+
+  function startCountdown() {
+    stopCountdown();
+    const show = showsData.find(s => s.id === currentShowId);
+    if (!show) return;
+
+    const target = parseShowDateTime(show);
+    if (!target) {
+      document.getElementById('countdown').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('countdown').style.display = 'block';
+
+    function tick() {
+      const now = new Date();
+      const diff = target - now;
+      const el = document.getElementById('countdown-time');
+      const labelEl = document.getElementById('countdown').querySelector('.countdown-label');
+
+      if (diff <= 0) {
+        labelEl.textContent = 'STATUS';
+        el.textContent = 'SHOWTIME';
+        el.className = 'countdown-time live';
+        return;
+      }
+
+      const days  = Math.floor(diff / 86400000);
+      const hours = Math.floor((diff % 86400000) / 3600000);
+      const mins  = Math.floor((diff % 3600000) / 60000);
+      const secs  = Math.floor((diff % 60000) / 1000);
+
+      let display;
+      if (days > 0) {
+        display = `${days}d ${String(hours).padStart(2,'0')}h ${String(mins).padStart(2,'0')}m ${String(secs).padStart(2,'0')}s`;
+      } else {
+        display = `${String(hours).padStart(2,'0')}h ${String(mins).padStart(2,'0')}m ${String(secs).padStart(2,'0')}s`;
+      }
+
+      labelEl.textContent = 'SHOWTIME IN';
+      el.textContent = display;
+      el.className = 'countdown-time' + (diff < 3600000 ? ' soon' : '');
+    }
+
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+  }
+
+  function stopCountdown() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+  }
 
   let searchTimeout;
   document.getElementById('search-input').addEventListener('input', (e) => {
