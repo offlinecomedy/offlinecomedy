@@ -78,20 +78,12 @@
     <div id="email-setup-section" style="display:none">
       <div class="ln bright" style="margin-bottom:.5rem">[ WELCOME TO OFFLINE COMEDY ]</div>
       <div class="ln dim" id="email-setup-greeting" style="margin-bottom:1rem"></div>
-      <div class="ln dim" style="margin-bottom:1rem">Enter your email or phone number to set up your Offline Comedy account.</div>
+      <div class="ln dim" style="margin-bottom:1rem">Enter your email or phone number to get started.</div>
       <div id="email-setup-flash" class="flash err"></div>
-      <div class="form-group" style="margin-bottom:.6rem;">
-        <div style="font-size:.7rem; color:var(--green-dim); margin-bottom:.3rem;">EMAIL</div>
-        <div class="input-row">
-          <span class="input-pfx">$&gt;</span>
-          <input type="email" id="setup-email" placeholder="your@email.com" />
-        </div>
-      </div>
       <div class="form-group" style="margin-bottom:1rem;">
-        <div style="font-size:.7rem; color:var(--green-dim); margin-bottom:.3rem;">PHONE</div>
         <div class="input-row">
           <span class="input-pfx">$&gt;</span>
-          <input type="tel" id="setup-phone" placeholder="(555) 000-0000" />
+          <input type="text" id="setup-contact" placeholder="email or phone number" />
         </div>
       </div>
       <button class="btn" id="setup-email-btn">Continue</button>
@@ -447,9 +439,10 @@
 
         // Wire up email submit
         document.getElementById('setup-email-btn').addEventListener('click', async () => {
-          const email = document.getElementById('setup-email').value.trim();
-          const phone = document.getElementById('setup-phone').value.trim();
-          if (!email && !phone) { flashEl('email-setup-flash', 'Enter at least an email or phone number'); return; }
+          const input = document.getElementById('setup-contact').value.trim();
+          if (!input) { flashEl('email-setup-flash', 'Enter your email or phone number'); return; }
+
+          const isPhone = /^\+?\d[\d\s\-().]{6,}$/.test(input) || input.replace(/\D/g, '').length >= 10;
 
           const btn = document.getElementById('setup-email-btn');
           btn.disabled = true; btn.textContent = 'Saving...';
@@ -457,8 +450,7 @@
           try {
             const savedInvite = localStorage.getItem('comedian_invite');
             const params = new URLSearchParams({ token: savedInvite });
-            if (email) params.set('email', email);
-            if (phone) params.set('phone', phone);
+            if (isPhone) { params.set('phone', input); } else { params.set('email', input); }
             const res2 = await fetch(`${API}/comedian-invite?${params.toString()}`);
             const data2 = await res2.json();
             if (!res2.ok) throw new Error(data2.error);
