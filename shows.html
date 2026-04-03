@@ -521,15 +521,47 @@
   }
 
   function renderMyTickets(data) {
-    const { tickets, stats } = data;
+    const { tickets, stats, transfers } = data;
     const upcoming = tickets.filter(t => !t.show.is_past);
     const past = tickets.filter(t => t.show.is_past);
+    const incomingTransfers = transfers ? transfers.incoming : [];
+    const outgoingTransfers = transfers ? transfers.outgoing : [];
 
     let html = '<hr class="sep" />';
     html += '<div class="ln yellow" style="margin-bottom:.5rem">[ YOUR TICKETS ]</div>';
 
+    // Incoming transfers
+    if (incomingTransfers.length > 0) {
+      html += '<div class="section-label" style="color:var(--yellow)">incoming transfers</div>';
+      incomingTransfers.forEach(t => {
+        html += `
+          <div class="ticket-card" style="border-color:var(--yellow); background:rgba(255,215,0,.03);">
+            <div class="row" style="color:var(--yellow)"><em style="color:var(--yellow)">${t.from_name}</em> wants to send you ${t.quantity} ticket${t.quantity > 1 ? 's' : ''}</div>
+            ${t.show ? `<div class="row">SHOW ......... <em>${t.show.date} — ${t.show.city}</em></div>` : ''}
+            <div style="display:flex; gap:.5rem; margin-top:.5rem;">
+              <button class="btn-sm transfer-action" data-id="${t.id}" data-action="accept" style="border-color:var(--green); color:var(--green);">Accept</button>
+              <button class="btn-sm transfer-action" data-id="${t.id}" data-action="decline" style="border-color:var(--red); color:var(--red);">Decline</button>
+            </div>
+          </div>`;
+      });
+    }
+
     if (upcoming.length > 0) {
       upcoming.forEach(t => { html += buildTicketHTML(t); });
+    }
+
+    // Outgoing transfers
+    if (outgoingTransfers.length > 0) {
+      html += '<div class="section-label">pending transfers</div>';
+      outgoingTransfers.forEach(t => {
+        html += `
+          <div class="ticket-card" style="border-color:var(--green-dark); opacity:.75;">
+            <div class="row">SENDING ...... <em>${t.quantity} ticket${t.quantity > 1 ? 's' : ''}</em> to <em>${t.to_name || t.to_phone}</em></div>
+            ${t.show ? `<div class="row">SHOW ......... <em>${t.show.date} — ${t.show.city}</em></div>` : ''}
+            <div class="row dim" style="font-size:.68rem">Waiting for recipient to accept</div>
+            <button class="btn-sm transfer-action" data-id="${t.id}" data-action="cancel" style="margin-top:.4rem; border-color:var(--red); color:var(--red);">Cancel transfer</button>
+          </div>`;
+      });
     }
 
     if (past.length > 0) {
@@ -537,7 +569,7 @@
       past.forEach(t => { html += buildTicketHTML(t); });
     }
 
-    if (tickets.length === 0) {
+    if (tickets.length === 0 && incomingTransfers.length === 0 && outgoingTransfers.length === 0) {
       html += '<div class="ln dim">$ no tickets found</div>';
     }
 
@@ -550,6 +582,31 @@
 
     mtEl.innerHTML = html;
     mtEl.style.display = 'block';
+
+    // Wire up transfer action buttons
+    document.querySelectorAll('.transfer-action').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const transferId = btn.dataset.id;
+        const action = btn.dataset.action;
+        btn.disabled = true;
+        btn.textContent = action === 'accept' ? 'Accepting...' : action === 'decline' ? 'Declining...' : 'Cancelling...';
+
+        try {
+          const res = await fetch(`${API_BASE}/transfer-action`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-guest-token': guestToken },
+            body: JSON.stringify({ transfer_id: transferId, action }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+          await loadTickets();
+        } catch (err) {
+          alert(err.message);
+          btn.disabled = false;
+          btn.textContent = action.charAt(0).toUpperCase() + action.slice(1);
+        }
+      });
+    });
 
     // Wire up feedback forms
     tickets.filter(t => t.show.is_past && !t.has_feedback).forEach(t => {
@@ -732,10 +789,10 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        flash.textContent = '$ Ticket shared! They\'ll get a text.';
+        flash.textContent = '$ Transfer sent! They\'ll get a text to accept.';
         flash.className = 'verify-flash ok';
 
-        // Reload tickets to reflect updated quantities
+        // Reload tickets to show pending transfer
         setTimeout(() => loadTickets(), 1500);
       } catch (err) {
         flash.textContent = '$ ' + err.message;
