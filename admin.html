@@ -971,7 +971,14 @@
   });
 
   // Auto-login if key is in session
-  if (adminKey) showMain();
+  if (adminKey) {
+    showMain();
+    // Auto-open edit mode if ?edit=ID is in URL
+    const editParam = new URLSearchParams(window.location.search).get('edit');
+    if (editParam) {
+      setTimeout(() => startEdit(editParam), 500);
+    }
+  }
 </script>
 </body>
 </html>

@@ -117,17 +117,8 @@
     const el = document.getElementById('content');
     el.style.display = 'block';
 
-    const venue = show.venues || (show.show_comedians ? null : null);
     const ticketsSold = show.tickets_sold || 0;
-    const remaining = show.capacity ? show.capacity - ticketsSold : null;
-
-    // Build venue info for day-of pre-populate
-    let venueText = '';
-    if (show.venue_id) {
-      // We need to fetch venue separately or it's in the response
-      // admin-shows with ?id= returns show_comedians but not venues directly
-      // Let's handle this below
-    }
+    const remaining = show.tickets_remaining;
 
     const ticketLink = `https://offlinecomedy.com/tickets.html?show_id=${show.id}`;
     const checkinLink = `https://offlinecomedy.com/checkin.html`;
@@ -196,7 +187,7 @@
       <!-- Navigation -->
       <div class="section-label">actions</div>
       <div class="btn-row">
-        <button class="btn btn-dim" onclick="window.location.href='admin.html'" style="font-size:.72rem; padding:.4rem .8rem;">&#9998; Edit show</button>
+        <button class="btn btn-dim" onclick="window.location.href='admin.html?edit=${showId}'" style="font-size:.72rem; padding:.4rem .8rem;">&#9998; Edit show</button>
         <a href="${checkinLink}" class="btn btn-dim" style="font-size:.72rem; padding:.4rem .8rem; text-decoration:none;">&#10003; Guest check-in</a>
       </div>
     `;
