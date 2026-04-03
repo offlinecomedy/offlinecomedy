@@ -139,6 +139,8 @@
 
       <div class="stat-row" style="margin-top:.6rem">
         ${remaining !== null ? `<div class="stat">SOLD<br><em>${ticketsSold}</em></div><div class="stat">REMAINING<br><em>${remaining}</em></div>` : ''}
+        ${show.historical_tickets_sold ? `<div class="stat">HIST. TICKETS<br><em>${show.historical_tickets_sold}</em></div>` : ''}
+        ${show.gross_sales_cents ? `<div class="stat">GROSS SALES<br><em>$${(show.gross_sales_cents / 100).toLocaleString()}</em></div>` : ''}
       </div>
 
       <hr class="sep" />
