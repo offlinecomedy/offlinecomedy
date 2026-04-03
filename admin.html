@@ -453,6 +453,7 @@
               <th>LOC ZIP</th>
               <th>PRICE</th>
               <th>STATUS</th>
+              <th>TICKETS</th>
               <th>ACTIONS</th>
             </tr>
           </thead>
@@ -460,6 +461,9 @@
 
       data.forEach(show => {
         const price = '$' + (show.ticket_price_cents / 100).toFixed(0);
+        const ticketsHTML = show.capacity
+          ? `<span style="color:var(--green)">${show.tickets_remaining}</span><span style="color:var(--green-dim)"> / ${show.capacity} remaining</span>`
+          : '<span style="color:var(--green-dim)">—</span>';
         html += `
           <tr>
             <td style="color:var(--yellow)">${show.date}</td>
@@ -467,9 +471,10 @@
             <td style="color:var(--green-dim)">${show.location_zip || '—'}</td>
             <td>${price}</td>
             <td>${badgeHTML(show.status)}</td>
+            <td>${ticketsHTML}</td>
             <td>
               <div class="action-btns">
-                        ${show.status !== 'announced' && show.status !== 'completed'
+                ${show.status !== 'announced' && show.status !== 'completed'
                   ? `<button class="btn yellow-btn" onclick="announceShow('${show.id}', '${show.city}')">&#9654; Announce</button>`
                   : ''}
                 <button class="btn" onclick="startEdit('${show.id}')" style="font-size:.72rem;padding:.4rem .8rem;border-color:var(--green-dim);color:var(--green-dim)">&#9998; Edit</button>
