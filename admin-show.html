@@ -319,7 +319,7 @@
         } else if (canPay && hasStripe) {
           payHTML = `<button class="pay-btn" data-booking-id="${b.id}" data-name="${name}" data-amount="${rate}" style="font-size:.66rem; padding:.2rem .5rem; border:1px solid var(--yellow); color:var(--yellow); background:transparent; font-family:inherit; cursor:pointer; letter-spacing:.1em;">PAY ${rate}</button>`;
         } else if (canPay && !hasStripe) {
-          payHTML = `<span style="font-size:.64rem; color:var(--red);">NO 1099</span>`;
+          payHTML = `<span style="font-size:.64rem; color:var(--red);">NO 1099</span> <button class="remind-btn" data-comedian-id="${c.id}" data-name="${name}" style="font-size:.64rem; padding:.15rem .4rem; border:1px solid var(--red); color:var(--red); background:transparent; font-family:inherit; cursor:pointer; margin-left:.3rem;">REMIND</button>`;
         }
 
         const card = document.createElement('div');
@@ -372,6 +372,42 @@
               flashEl.style.color = 'var(--red)';
               payBtn.disabled = false;
               payBtn.textContent = `PAY ${bAmount}`;
+            }
+          });
+        }
+
+        // Wire up remind button
+        const remindBtn = card.querySelector('.remind-btn');
+        if (remindBtn) {
+          remindBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const cId = remindBtn.dataset.comedianId;
+            const cName = remindBtn.dataset.name;
+            if (!confirm(`Send 1099 reminder to ${cName}?`)) return;
+
+            remindBtn.disabled = true;
+            remindBtn.textContent = 'Sending...';
+            const flashEl = card.querySelector('.pay-flash');
+
+            try {
+              const res = await fetch(`${API}/connect-remind`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                body: JSON.stringify({ comedian_id: cId }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error);
+
+              remindBtn.textContent = 'SENT';
+              remindBtn.style.borderColor = 'var(--green)';
+              remindBtn.style.color = 'var(--green)';
+              flashEl.textContent = '$ Reminder sent';
+              flashEl.style.color = 'var(--green)';
+            } catch (err) {
+              flashEl.textContent = '$ ' + err.message;
+              flashEl.style.color = 'var(--red)';
+              remindBtn.disabled = false;
+              remindBtn.textContent = 'REMIND';
             }
           });
         }
