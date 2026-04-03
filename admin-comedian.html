@@ -125,6 +125,15 @@
 
       <hr class="sep" />
 
+      <!-- Invite Link -->
+      <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+        <span style="font-size:.72rem; color:var(--green-dim);">PORTAL LINK</span>
+        <button id="gen-invite-btn" style="font-size:.68rem; padding:.2rem .5rem; border:1px solid var(--green-dim); color:var(--green-dim); background:transparent; font-family:inherit; cursor:pointer;">Generate invite link</button>
+        <span id="invite-link-display" style="font-size:.68rem; color:var(--green); word-break:break-all;"></span>
+      </div>
+
+      <hr class="sep" />
+
       <!-- Stats -->
       <div class="stat-row">
         <div class="stat">SHOWS<br><em>${c.stats.shows_performed}</em></div>
@@ -178,6 +187,43 @@
       }
 
       listEl.appendChild(card);
+    });
+
+    // Wire up invite link generator
+    document.getElementById('gen-invite-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('gen-invite-btn');
+      const display = document.getElementById('invite-link-display');
+      btn.disabled = true; btn.textContent = 'Generating...';
+
+      try {
+        const res = await fetch(`${API}/comedian-invite`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+          body: JSON.stringify({ comedian_id: comedianId }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        display.textContent = data.link;
+        navigator.clipboard.writeText(data.link);
+        btn.textContent = 'Copied!';
+        btn.style.borderColor = 'var(--green)';
+        btn.style.color = 'var(--green)';
+        setTimeout(() => {
+          btn.textContent = 'Copy again';
+          btn.disabled = false;
+          btn.addEventListener('click', () => {
+            navigator.clipboard.writeText(data.link);
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = 'Copy again'; }, 1500);
+          }, { once: true });
+        }, 2000);
+      } catch (err) {
+        display.textContent = err.message;
+        display.style.color = 'var(--red)';
+        btn.disabled = false;
+        btn.textContent = 'Generate invite link';
+      }
     });
 
     // Wire up follower update

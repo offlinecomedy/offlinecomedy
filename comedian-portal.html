@@ -375,12 +375,40 @@
     document.getElementById('login-section').style.display = 'block';
   });
 
-  // Init
-  if (comedianToken) {
-    loadPortal();
-  } else {
-    document.getElementById('login-section').style.display = 'block';
+  // Init — check for invite link first
+  async function init() {
+    const inviteToken = new URLSearchParams(window.location.search).get('invite');
+
+    if (inviteToken) {
+      // Validate invite and get session
+      try {
+        const res = await fetch(`${API}/comedian-invite?token=${encodeURIComponent(inviteToken)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        comedianToken = data.session_token;
+        localStorage.setItem('comedian_token', comedianToken);
+
+        // Clean URL
+        window.history.replaceState({}, '', 'comedian-portal.html');
+
+        loadPortal();
+        return;
+      } catch (err) {
+        document.getElementById('login-section').style.display = 'block';
+        flashEl('login-flash', err.message);
+        return;
+      }
+    }
+
+    if (comedianToken) {
+      loadPortal();
+    } else {
+      document.getElementById('login-section').style.display = 'block';
+    }
   }
+
+  init();
 </script>
 </body>
 </html>
