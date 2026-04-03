@@ -559,6 +559,10 @@
 
     if (!name || !address) { flash('main-flash', 'Venue name and address required.', 'err'); return; }
 
+    const btn = document.getElementById('create-venue-btn');
+    btn.textContent = 'Saving...';
+    btn.disabled = true;
+
     try {
       const res  = await fetch(`${API}/admin-venues`, {
         method:  'POST',
@@ -571,7 +575,10 @@
       selectVenue(venue);
       flash('main-flash', `Venue saved: ${venue.name}`, 'ok');
     } catch (err) {
-      flash('main-flash', err.message, 'err');
+      flash('main-flash', `Venue error: ${err.message}`, 'err');
+    } finally {
+      btn.textContent = '+ Save Venue';
+      btn.disabled = false;
     }
   });
 
@@ -617,40 +624,37 @@
 
     const matches = allComedians.filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
     const container = document.getElementById('comedian-results');
+    container.innerHTML = '';
 
-    if (!matches.length) {
-      // Offer to create
-      container.innerHTML = `<div style="font-size:.74rem;color:var(--green-dim);margin-top:.3rem">
-        $ not found — <span style="color:var(--green);cursor:pointer;text-decoration:underline" id="create-comedian-now">add "${q}" as new comedian</span>
-      </div>`;
-      document.getElementById('create-comedian-now').addEventListener('click', async () => {
-        try {
-          const res  = await fetch(`${API}/admin-comedians`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
-            body:    JSON.stringify({ name: q }),
-          });
-          const comedian = await res.json();
-          if (!res.ok) throw new Error(comedian.error);
-          allComedians.push(comedian);
-          addComedian(comedian);
-        } catch (err) {
-          flash('main-flash', err.message, 'err');
-        }
+    if (matches.length) {
+      // Show matches to pick from
+      container.innerHTML = matches.map(c =>
+        `<div class="comedian-option" data-id="${c.id}" style="font-size:.76rem;padding:.3rem .5rem;cursor:pointer;color:var(--green);border-left:2px solid var(--green-dark);margin-top:.2rem">${c.name}</div>`
+      ).join('');
+      container.querySelectorAll('.comedian-option').forEach(el => {
+        el.addEventListener('click', () => {
+          const c = allComedians.find(x => x.id === el.dataset.id);
+          if (c) addComedian(c);
+        });
       });
-      return;
+    } else {
+      // No match — create immediately
+      container.innerHTML = `<div style="font-size:.74rem;color:var(--green-dim);margin-top:.3rem">$ creating "${q}"...</div>`;
+      try {
+        const res = await fetch(`${API}/admin-comedians`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+          body:    JSON.stringify({ name: q }),
+        });
+        const comedian = await res.json();
+        if (!res.ok) throw new Error(comedian.error);
+        allComedians.push(comedian);
+        addComedian(comedian);
+        container.innerHTML = '';
+      } catch (err) {
+        container.innerHTML = `<div style="font-size:.74rem;color:var(--red);margin-top:.3rem">$ error: ${err.message}</div>`;
+      }
     }
-
-    container.innerHTML = matches.map(c =>
-      `<div class="comedian-option" data-id="${c.id}" style="font-size:.76rem;padding:.3rem .5rem;cursor:pointer;color:var(--green);border-left:2px solid var(--green-dark);margin-top:.2rem">${c.name}</div>`
-    ).join('');
-
-    container.querySelectorAll('.comedian-option').forEach(el => {
-      el.addEventListener('click', () => {
-        const c = allComedians.find(x => x.id === el.dataset.id);
-        if (c) addComedian(c);
-      });
-    });
   });
 
   document.getElementById('s-comedian-search').addEventListener('keydown', e => {
