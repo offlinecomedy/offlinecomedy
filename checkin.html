@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — CHECK-IN</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #00ff41;
+      --green-dim:  #00b32c;
+      --green-dark: #003b0f;
+      --yellow:     #ffd700;
+      --red:        #ff4444;
+      --bg:         #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(0,255,65,.025) 0px, rgba(0,255,65,.025) 1px, transparent 1px, transparent 2px);
+      pointer-events: none; z-index: 999;
+    }
+
+    .terminal {
+      width: 100%; max-width: 640px;
+      border: 1px solid var(--green-dim);
+      border-radius: 4px;
+      box-shadow: 0 0 24px rgba(0,255,65,.18), 0 0 80px rgba(0,255,65,.06);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--green-dark);
+      border-bottom: 1px solid var(--green-dim);
+      padding: 8px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: .45; }
+    .terminal-title { flex: 1; text-align: center; font-size: .68rem; color: var(--green-dim); letter-spacing: .18em; }
+
+    .terminal-body { padding: 1.4rem 1.6rem 2rem; background: var(--bg); }
+
+    .ln { font-size: .82rem; line-height: 1.65; }
+    .dim    { color: var(--green-dim); }
+    .bright { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,.55); }
+    .yellow { color: var(--yellow); }
+
+    .sep { border: none; border-top: 1px solid var(--green-dark); margin: 1rem 0; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: .74rem; color: var(--green-dim); margin-bottom: .3rem; letter-spacing: .07em; }
+    .form-label em { color: var(--green); font-style: normal; }
+
+    .input-row {
+      display: flex; align-items: center;
+      border: 1px solid var(--green-dark); background: #0a0a0a;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-row:focus-within { border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,65,.2); }
+    .input-pfx { padding: .5rem .65rem; color: var(--green-dim); font-size: .85rem; user-select: none; }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"] {
+      background: transparent; border: none; outline: none;
+      color: var(--green); font-family: inherit; font-size: .88rem;
+      width: 100%; padding: .5rem .5rem .5rem 0; caret-color: var(--green);
+    }
+    input::placeholder { color: #1c4827; }
+
+    select {
+      background: #0a0a0a; border: 1px solid var(--green-dark);
+      color: var(--green); font-family: inherit; font-size: .82rem;
+      padding: .5rem; width: 100%; cursor: pointer; outline: none;
+    }
+    select:focus { border-color: var(--green); }
+    select option { background: #0a0a0a; color: var(--green); }
+
+    .btn {
+      background: transparent; border: 1px solid var(--green);
+      color: var(--green); font-family: inherit; font-size: .8rem;
+      padding: .55rem 1rem; cursor: pointer; letter-spacing: .15em;
+      text-transform: uppercase; transition: background .18s, box-shadow .18s, color .18s;
+    }
+    .btn:hover  { background: var(--green); color: #000; box-shadow: 0 0 18px rgba(0,255,65,.4); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-sm { padding: .35rem .7rem; font-size: .72rem; }
+
+    .flash { font-size: .78rem; padding: .5rem .8rem; border: 1px solid; margin-bottom: 1rem; display: none; }
+    .flash.err { border-color: var(--red); color: var(--red); }
+    .flash.show { display: block; }
+
+    /* Guest list */
+    .guest-list { margin-top: .5rem; }
+
+    .guest-row {
+      border: 1px solid var(--green-dark);
+      padding: .7rem .9rem;
+      margin-bottom: .5rem;
+      background: rgba(0,255,65,.02);
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      flex-wrap: wrap;
+    }
+    .guest-row.checked-in {
+      border-color: var(--green-dim);
+      background: rgba(0,255,65,.06);
+    }
+
+    .guest-name { font-size: .82rem; color: var(--green); flex: 1; min-width: 120px; }
+    .guest-info { font-size: .72rem; color: var(--green-dim); }
+    .guest-status { font-size: .72rem; margin-left: auto; }
+    .guest-status.in  { color: var(--green); }
+    .guest-status.out { color: var(--yellow); }
+
+    .checkin-controls {
+      display: flex; align-items: center; gap: .5rem;
+      width: 100%; margin-top: .4rem;
+    }
+    .checkin-controls .qty-btn {
+      background: transparent; border: 1px solid var(--green-dark);
+      color: var(--green-dim); font-family: inherit; font-size: .85rem;
+      width: 28px; height: 28px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .checkin-controls .qty-btn:hover { border-color: var(--green); color: var(--green); }
+    .checkin-count { font-size: .85rem; color: var(--green); min-width: 1.5rem; text-align: center; }
+
+    .stats-bar {
+      display: flex; gap: 1.2rem; font-size: .75rem; margin-bottom: 1rem;
+      color: var(--green-dim);
+    }
+    .stats-bar em { color: var(--green); font-style: normal; }
+
+    #login-section, #checkin-section { display: none; }
+
+    .cur {
+      display: inline-block; width: 8px; height: .9em;
+      background: var(--green); vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  </style>
+</head>
+<body>
+
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — door_checkin.enc</div>
+  </div>
+
+  <div class="terminal-body">
+
+    <!-- Login -->
+    <div id="login-section">
+      <div class="ln bright" style="margin-bottom:1rem">[ STAFF LOGIN ]</div>
+
+      <div id="login-flash" class="flash err"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-email"><em>EMAIL</em></label>
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="email" id="login-email" placeholder="staff@offlinecomedy.com" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-pass"><em>PASSWORD</em></label>
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="password" id="login-pass" placeholder="password" />
+        </div>
+      </div>
+
+      <button class="btn" id="login-btn" style="width:100%">Login</button>
+    </div>
+
+    <!-- Check-in panel -->
+    <div id="checkin-section">
+      <div class="ln bright" style="margin-bottom:.3rem">[ DOOR CHECK-IN ]</div>
+      <div class="ln dim" id="staff-greeting" style="margin-bottom:1rem"></div>
+
+      <div class="form-group">
+        <label class="form-label"><em>SELECT SHOW</em></label>
+        <select id="show-select"><option value="">Loading shows...</option></select>
+      </div>
+
+      <div id="show-panel" style="display:none">
+        <div class="stats-bar" id="stats-bar"></div>
+
+        <div class="form-group">
+          <label class="form-label"><em>SEARCH GUEST</em></label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="text" id="search-input" placeholder="Type a name..." />
+          </div>
+        </div>
+
+        <div class="guest-list" id="guest-list"></div>
+      </div>
+    </div>
+
+    <div style="margin-top:1.4rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api';
+
+  let token    = sessionStorage.getItem('staff_token');
+  let staffInfo = JSON.parse(sessionStorage.getItem('staff_info') || 'null');
+  let currentShowId = null;
+  let guests   = [];
+
+  function flashLogin(msg) {
+    const el = document.getElementById('login-flash');
+    el.textContent = '$ ' + msg;
+    el.classList.add('show');
+  }
+
+  // Login
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-pass').value;
+    if (!email || !pass) { flashLogin('Email and password required.'); return; }
+
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true;
+    btn.textContent = 'Authenticating...';
+
+    try {
+      const res = await fetch(`${API}/staff-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      token = data.token;
+      staffInfo = data.staff;
+      sessionStorage.setItem('staff_token', token);
+      sessionStorage.setItem('staff_info', JSON.stringify(staffInfo));
+      showCheckinPanel();
+    } catch (err) {
+      flashLogin(err.message);
+      btn.disabled = false;
+      btn.textContent = '> Login';
+    }
+  });
+
+  // Enter key on password field
+  document.getElementById('login-pass').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('login-btn').click();
+  });
+
+  async function showCheckinPanel() {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('checkin-section').style.display = 'block';
+    document.getElementById('staff-greeting').textContent = `$ logged in as ${staffInfo.name} (${staffInfo.role})`;
+
+    // Load shows for dropdown
+    try {
+      const res = await fetch(`${API}/admin-shows`, {
+        headers: { 'x-admin-key': 'public-shows-list' },
+      });
+      // Fallback: use the show endpoint to get shows
+    } catch {}
+
+    // Use a simpler approach: fetch shows via admin endpoint or a public list
+    // For now, use the admin-shows endpoint with the staff token approach
+    // Actually, let's add show listing to the checkin endpoint
+    await loadShowList();
+  }
+
+  async function loadShowList() {
+    try {
+      // We'll use the public shows endpoint — staff can see all upcoming shows
+      // Get shows with a broad query by fetching admin-shows
+      const res = await fetch(`${API}/admin-shows`, {
+        headers: { 'x-admin-key': process.env?.ADMIN_KEY || '' },
+      });
+      // This won't work without admin key. Let's use a different approach.
+    } catch {}
+
+    // Alternative: fetch announced shows directly from supabase via a simple endpoint
+    // For now, hardcode the show select by using staff's checkin endpoint
+    const select = document.getElementById('show-select');
+    select.innerHTML = '<option value="">-- Pick a show --</option>';
+
+    // We need a way to list shows for staff. Let's use the checkin GET with no search.
+    // Actually, we need a shows list. Let me fetch from the show endpoint with known IDs.
+    // Best approach: add show listing to checkin endpoint.
+
+    // For MVP: fetch from admin-shows with admin key stored in staff session
+    // OR: create a lightweight endpoint. For now, let's try fetching all shows publicly.
+    try {
+      const res = await fetch(`${API}/shows-list`, {
+        headers: { 'x-staff-token': token },
+      });
+      const shows = await res.json();
+      if (Array.isArray(shows)) {
+        shows.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.id;
+          opt.textContent = `${s.date} — ${s.city}`;
+          select.appendChild(opt);
+        });
+      }
+    } catch {
+      select.innerHTML = '<option value="">Error loading shows</option>';
+    }
+  }
+
+  document.getElementById('show-select').addEventListener('change', () => {
+    currentShowId = document.getElementById('show-select').value;
+    if (currentShowId) {
+      document.getElementById('show-panel').style.display = 'block';
+      searchGuests('');
+    } else {
+      document.getElementById('show-panel').style.display = 'none';
+    }
+  });
+
+  let searchTimeout;
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => searchGuests(e.target.value), 300);
+  });
+
+  async function searchGuests(query) {
+    if (!currentShowId) return;
+
+    try {
+      const url = `${API}/checkin?show_id=${encodeURIComponent(currentShowId)}${query ? '&q=' + encodeURIComponent(query) : ''}`;
+      const res = await fetch(url, {
+        headers: { 'x-staff-token': token },
+      });
+      guests = await res.json();
+      if (!res.ok) throw new Error(guests.error);
+      renderGuests();
+    } catch (err) {
+      document.getElementById('guest-list').innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
+    }
+  }
+
+  function renderGuests() {
+    const listEl = document.getElementById('guest-list');
+
+    // Stats
+    const totalTickets   = guests.reduce((s, g) => s + g.quantity, 0);
+    const totalCheckedIn = guests.reduce((s, g) => s + g.checked_in_count, 0);
+    document.getElementById('stats-bar').innerHTML =
+      `GUESTS: <em>${guests.length}</em> &nbsp; TICKETS: <em>${totalTickets}</em> &nbsp; CHECKED IN: <em>${totalCheckedIn}/${totalTickets}</em>`;
+
+    if (guests.length === 0) {
+      listEl.innerHTML = '<div class="ln dim">$ no matching guests found</div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+
+    guests.forEach(g => {
+      const allIn = g.checked_in_count >= g.quantity;
+      const row = document.createElement('div');
+      row.className = 'guest-row' + (allIn ? ' checked-in' : '');
+      row.innerHTML = `
+        <div class="guest-name">${g.buyer_name || 'Unknown'}</div>
+        <div class="guest-info">${g.quantity} ticket${g.quantity > 1 ? 's' : ''}</div>
+        <div class="guest-status ${allIn ? 'in' : 'out'}">${allIn ? 'CHECKED IN' : g.checked_in_count > 0 ? g.checked_in_count + '/' + g.quantity + ' IN' : 'NOT IN'}</div>
+        <div class="checkin-controls">
+          <button class="qty-btn" data-dir="-1" ${g.checked_in_count <= 0 ? 'disabled' : ''}>&#8722;</button>
+          <span class="checkin-count">${g.checked_in_count}</span>
+          <button class="qty-btn" data-dir="1" ${g.checked_in_count >= g.quantity ? 'disabled' : ''}>+</button>
+          ${!allIn ? `<button class="btn btn-sm" data-all="1" style="margin-left:auto">Check in all</button>` : ''}
+        </div>
+      `;
+
+      // +/- buttons
+      row.querySelectorAll('.qty-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const dir = parseInt(btn.dataset.dir);
+          const newCount = Math.max(0, Math.min(g.quantity, g.checked_in_count + dir));
+          updateCheckin(g.id, newCount);
+        });
+      });
+
+      // Check in all button
+      const allBtn = row.querySelector('[data-all]');
+      if (allBtn) {
+        allBtn.addEventListener('click', () => updateCheckin(g.id, g.quantity));
+      }
+
+      listEl.appendChild(row);
+    });
+  }
+
+  async function updateCheckin(orderId, count) {
+    try {
+      const res = await fetch(`${API}/checkin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-staff-token': token },
+        body: JSON.stringify({ order_id: orderId, count }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      // Update local state and re-render
+      const guest = guests.find(g => g.id === orderId);
+      if (guest) guest.checked_in_count = count;
+      renderGuests();
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  // Init
+  if (token && staffInfo) {
+    showCheckinPanel();
+  } else {
+    document.getElementById('login-section').style.display = 'block';
+  }
+</script>
+</body>
+</html>

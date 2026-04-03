@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OFFLINE COMEDY — TICKETS</title>
+  <script src="https://js.stripe.com/v3/"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
 
@@ -112,7 +113,8 @@
     .input-pfx { padding: .5rem .65rem; color: var(--green-dim); font-size: .85rem; user-select: none; }
 
     input[type="tel"],
-    input[type="number"] {
+    input[type="text"],
+    input[type="email"] {
       background: transparent; border: none; outline: none;
       color: var(--green); font-family: inherit; font-size: .88rem;
       width: 100%; padding: .5rem .5rem .5rem 0; caret-color: var(--green);
@@ -140,6 +142,21 @@
     }
     .qty-total em { color: var(--yellow); font-style: normal; }
 
+    /* Stripe Elements container */
+    #card-element {
+      border: 1px solid var(--green-dark);
+      background: #0a0a0a;
+      padding: .65rem .75rem;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    #card-element.StripeElement--focus {
+      border-color: var(--green);
+      box-shadow: 0 0 10px rgba(0,255,65,.2);
+    }
+    #card-errors {
+      font-size: .72rem; color: var(--red); margin-top: .3rem; min-height: 1.1em;
+    }
+
     .btn {
       width: 100%; background: transparent; border: 1px solid var(--green);
       color: var(--green); font-family: inherit; font-size: .84rem;
@@ -157,6 +174,7 @@
       border: 1px solid; margin-bottom: 1rem; display: none;
     }
     .flash.err  { border-color: var(--red); color: var(--red); }
+    .flash.ok   { border-color: var(--green); color: var(--green); }
     .flash.show { display: block; }
 
     .back-link {
@@ -175,6 +193,18 @@
 
     #loading { text-align: center; padding: 2rem 0; }
     #content { display: none; }
+
+    /* Confirmation */
+    .confirm-box {
+      border: 1px solid var(--green);
+      padding: 1.2rem;
+      text-align: center;
+      background: rgba(0,255,65,.03);
+    }
+    .confirm-box .check {
+      font-size: 2rem; margin-bottom: .5rem;
+      text-shadow: 0 0 16px rgba(0,255,65,.6);
+    }
   </style>
 </head>
 <body>
@@ -199,13 +229,13 @@
 
       <div id="flash" class="flash err"></div>
 
-      <!-- Form -->
+      <!-- Order form -->
       <div id="order-form">
         <div class="form-group">
           <label class="form-label"><em>TICKETS</em></label>
           <div style="margin-top:.4rem">
             <div class="qty-row">
-              <button class="qty-btn" id="qty-down">−</button>
+              <button class="qty-btn" id="qty-down">&#8722;</button>
               <span class="qty-display" id="qty-display">1</span>
               <button class="qty-btn" id="qty-up">+</button>
               <span class="qty-total">= <em id="qty-total-price">$20</em></span>
@@ -215,18 +245,51 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="phone-input"><em>PHONE_NUMBER</em>  // for order confirmation</label>
+          <label class="form-label" for="name-input"><em>NAME</em></label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="text" id="name-input" placeholder="Full name" autocomplete="name" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="email-input"><em>EMAIL</em></label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="email" id="email-input" placeholder="you@email.com" autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone-input"><em>PHONE</em></label>
           <div class="input-row">
             <span class="input-pfx">$&gt;</span>
             <input type="tel" id="phone-input" placeholder="(555) 000-0000" autocomplete="tel" />
           </div>
         </div>
 
-        <button class="btn" id="checkout-btn">Proceed to payment</button>
+        <hr class="sep" />
+
+        <div class="form-group">
+          <label class="form-label"><em>PAYMENT</em></label>
+          <div id="card-element"></div>
+          <div id="card-errors"></div>
+        </div>
+
+        <button class="btn" id="checkout-btn">Pay now</button>
+      </div>
+
+      <!-- Confirmation (hidden until success) -->
+      <div id="confirmation" style="display:none">
+        <div class="confirm-box">
+          <div class="check">&#10003;</div>
+          <div class="ln bright">TRANSACTION COMPLETE</div>
+          <div class="ln dim" style="margin-top:.5rem">You're in. Details will be texted 24hrs before the show.</div>
+          <div class="ln dim" id="confirm-details" style="margin-top:.8rem"></div>
+        </div>
       </div>
 
       <a href="javascript:history.back()" class="back-link">&lt; back</a>
-
       <div style="margin-top:1.4rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
     </div>
 
@@ -235,17 +298,36 @@
 
 <script>
   const API     = 'https://offlinecomedy-backend.vercel.app/api';
+  const STRIPE_PK = 'pk_test_51QxfJOIBfGMXvVHknnBL1Oy2Gw2ULm5iq36DxjwilDwLdFdR8fGvTTOvCYwNbFHxFYHhk4zG4oMkjx6cWVZLcBz00hJcLCLkc';
   const params  = new URLSearchParams(window.location.search);
   const showId  = params.get('show_id');
+
+  const stripeClient = Stripe(STRIPE_PK);
+  const elements = stripeClient.elements();
+  const cardElement = elements.create('card', {
+    style: {
+      base: {
+        color: '#00ff41',
+        fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+        fontSize: '14px',
+        '::placeholder': { color: '#1c4827' },
+      },
+      invalid: { color: '#ff4444' },
+    },
+  });
 
   let show      = null;
   let quantity  = 1;
   let remaining = null;
 
-  function flash(msg) {
+  function flash(msg, type) {
     const el = document.getElementById('flash');
     el.textContent = '$ ' + msg;
-    el.classList.add('show');
+    el.className = `flash ${type || 'err'} show`;
+  }
+
+  function clearFlash() {
+    document.getElementById('flash').className = 'flash err';
   }
 
   function updateQtyUI() {
@@ -262,8 +344,6 @@
       return;
     }
 
-    // Fetch show data from the shows endpoint using a placeholder zip
-    // We pass the show_id directly to admin-shows (public version)
     try {
       const res  = await fetch(`${API}/show?id=${encodeURIComponent(showId)}`);
       const data = await res.json();
@@ -271,7 +351,6 @@
       show      = data;
       remaining = show.tickets_remaining;
 
-      // Render show card
       const soldOut = remaining !== null && remaining <= 0;
       document.getElementById('show-card').innerHTML = `
         <div class="row">DATE ......... <em>${show.date}</em></div>
@@ -291,6 +370,7 @@
           document.getElementById('remaining-note').textContent = `max ${remaining} per order`;
         }
         updateQtyUI();
+        cardElement.mount('#card-element');
       }
 
       document.getElementById('loading').style.display = 'none';
@@ -301,6 +381,12 @@
     }
   }
 
+  // Card validation errors
+  cardElement.on('change', (event) => {
+    const errEl = document.getElementById('card-errors');
+    errEl.textContent = event.error ? event.error.message : '';
+  });
+
   document.getElementById('qty-down').addEventListener('click', () => {
     if (quantity > 1) { quantity--; updateQtyUI(); }
   });
@@ -309,32 +395,68 @@
   });
 
   document.getElementById('checkout-btn').addEventListener('click', async () => {
+    clearFlash();
+    const name  = document.getElementById('name-input').value.trim();
+    const email = document.getElementById('email-input').value.trim();
     const phone = document.getElementById('phone-input').value.trim();
+
+    if (!name)  { flash('Name is required.'); return; }
+    if (!email) { flash('Email is required.'); return; }
     if (!phone) { flash('Phone number is required.'); return; }
 
     const btn = document.getElementById('checkout-btn');
-    btn.textContent = 'Connecting to Stripe...';
+    btn.textContent = 'Processing...';
     btn.disabled = true;
 
     try {
-      const res  = await fetch(`${API}/checkout`, {
-        method:  'POST',
+      // 1. Create payment intent on server
+      const res = await fetch(`${API}/create-payment-intent`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ show_id: showId, quantity, phone }),
+        body: JSON.stringify({ show_id: showId, quantity, phone, name, email }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      window.location.href = data.url;
+
+      // 2. Confirm payment with Stripe
+      const { error, paymentIntent } = await stripeClient.confirmCardPayment(data.clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: { name, email, phone },
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (paymentIntent.status === 'succeeded') {
+        // Show confirmation
+        document.getElementById('order-form').style.display = 'none';
+        document.getElementById('confirmation').style.display = 'block';
+        document.getElementById('confirm-details').innerHTML =
+          `${quantity} ticket${quantity > 1 ? 's' : ''} for ${show.date} — ${show.city}`;
+
+        // Save name/email to localStorage for future use
+        localStorage.setItem('oc_phone', phone);
+        localStorage.setItem('oc_name', name);
+        localStorage.setItem('oc_email', email);
+      }
+
     } catch (err) {
       flash(err.message);
-      btn.textContent = '> Proceed to payment';
+      btn.textContent = '> Pay now';
       btn.disabled = false;
     }
   });
 
-  // Pre-fill phone from localStorage
+  // Pre-fill from localStorage
   const savedPhone = localStorage.getItem('oc_phone');
+  const savedName  = localStorage.getItem('oc_name');
+  const savedEmail = localStorage.getItem('oc_email');
   if (savedPhone) document.getElementById('phone-input').value = savedPhone;
+  if (savedName)  document.getElementById('name-input').value  = savedName;
+  if (savedEmail) document.getElementById('email-input').value = savedEmail;
 
   loadShow();
 </script>
