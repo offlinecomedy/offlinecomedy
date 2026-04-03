@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — ADMIN</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff41; --green-dim:#00b32c; --green-dark:#003b0f; --yellow:#ffd700; --red:#ff4444; --bg:#050505; }
+    body { background:var(--bg); color:var(--green); font-family:'Share Tech Mono','Courier New',monospace; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:2rem 1rem; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,rgba(0,255,65,.025) 0px,rgba(0,255,65,.025) 1px,transparent 1px,transparent 2px); pointer-events:none; z-index:999; }
+    .terminal { width:100%; max-width:700px; border:1px solid var(--green-dim); border-radius:4px; box-shadow:0 0 24px rgba(0,255,65,.18); overflow:hidden; }
+    .terminal-bar { background:var(--green-dark); border-bottom:1px solid var(--green-dim); padding:8px 14px; display:flex; align-items:center; gap:10px; }
+    .dots { display:flex; gap:6px; }
+    .dot { width:11px; height:11px; border-radius:50%; background:var(--green-dim); opacity:.45; }
+    .terminal-title { flex:1; text-align:center; font-size:.68rem; color:var(--green-dim); letter-spacing:.18em; }
+    .terminal-body { padding:1.8rem 1.6rem 2rem; background:var(--bg); }
+    .ln { font-size:.82rem; line-height:1.65; }
+    .dim { color:var(--green-dim); }
+    .bright { color:var(--green); text-shadow:0 0 8px rgba(0,255,65,.55); }
+
+    .tiles { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:1.2rem; }
+    .tile {
+      border:1px solid var(--green-dark); padding:1.2rem 1rem;
+      background:rgba(0,255,65,.02); cursor:pointer; text-decoration:none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      display:block;
+    }
+    .tile:hover {
+      border-color:var(--green); background:rgba(0,255,65,.05);
+      box-shadow:0 0 16px rgba(0,255,65,.2);
+    }
+    .tile-icon { font-size:1.6rem; margin-bottom:.5rem; }
+    .tile-title { font-size:.85rem; color:var(--green); letter-spacing:.12em; margin-bottom:.3rem; }
+    .tile-desc { font-size:.68rem; color:var(--green-dim); line-height:1.5; }
+    .tile-stat { font-size:.72rem; color:var(--yellow); margin-top:.5rem; }
+
+    .sep { border:none; border-top:1px solid var(--green-dark); margin:1.2rem 0; }
+    .quick-stats { display:flex; gap:1.5rem; flex-wrap:wrap; }
+    .stat { font-size:.74rem; color:var(--green-dim); }
+    .stat em { color:var(--green); font-style:normal; font-size:.88rem; }
+
+    .cur { display:inline-block; width:8px; height:.9em; background:var(--green); vertical-align:text-bottom; animation:blink 1s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Login */
+    .form-group { margin-bottom:1rem; }
+    .form-label { display:block; font-size:.74rem; color:var(--green-dim); margin-bottom:.3rem; letter-spacing:.07em; }
+    .form-label em { color:var(--green); font-style:normal; }
+    .input-row { display:flex; align-items:center; border:1px solid var(--green-dark); background:#0a0a0a; }
+    .input-row:focus-within { border-color:var(--green); box-shadow:0 0 10px rgba(0,255,65,.2); }
+    .input-pfx { padding:.5rem .65rem; color:var(--green-dim); font-size:.85rem; }
+    input[type="password"] { background:transparent; border:none; outline:none; color:var(--green); font-family:inherit; font-size:.88rem; width:100%; padding:.5rem .5rem .5rem 0; }
+    input::placeholder { color:#1c4827; }
+    .btn { background:transparent; border:1px solid var(--green); color:var(--green); font-family:inherit; font-size:.8rem; padding:.55rem 1rem; cursor:pointer; letter-spacing:.15em; text-transform:uppercase; width:100%; transition:background .18s, color .18s; }
+    .btn:hover { background:var(--green); color:#000; }
+    .flash { font-size:.78rem; padding:.5rem .8rem; border:1px solid var(--red); color:var(--red); margin-bottom:1rem; display:none; }
+    .flash.show { display:block; }
+    #login-section, #dashboard { display:none; }
+  </style>
+</head>
+<body>
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — admin_console.enc</div>
+  </div>
+  <div class="terminal-body">
+
+    <!-- Login -->
+    <div id="login-section">
+      <div class="ln bright" style="margin-bottom:1rem">[ ADMIN LOGIN ]</div>
+      <div id="login-flash" class="flash"></div>
+      <div class="form-group">
+        <label class="form-label" for="key-input"><em>ADMIN_KEY</em></label>
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="password" id="key-input" placeholder="enter key" />
+        </div>
+      </div>
+      <button class="btn" id="login-btn">Login</button>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard">
+      <div class="ln bright" style="margin-bottom:.3rem">[ OFFLINE COMEDY — ADMIN ]</div>
+      <div class="ln dim" id="greeting"></div>
+
+      <hr class="sep" />
+
+      <div class="quick-stats" id="stats"></div>
+
+      <div class="tiles">
+        <a class="tile" href="admin.html">
+          <div class="tile-icon">&#9654;</div>
+          <div class="tile-title">SHOWS</div>
+          <div class="tile-desc">Create, edit, and manage shows. Announce shows, send day-of messages.</div>
+          <div class="tile-stat" id="stat-shows"></div>
+        </a>
+        <a class="tile" href="admin-comedians.html">
+          <div class="tile-icon">&#9733;</div>
+          <div class="tile-title">COMEDIANS</div>
+          <div class="tile-desc">Manage comedian roster, contacts, 1099 status, and payment tracking.</div>
+          <div class="tile-stat" id="stat-comedians"></div>
+        </a>
+        <a class="tile" href="checkin.html">
+          <div class="tile-icon">&#10003;</div>
+          <div class="tile-title">CHECK-IN</div>
+          <div class="tile-desc">Door check-in for tonight's show. Search guests by name or phone.</div>
+        </a>
+        <a class="tile" href="admin.html" onclick="sessionStorage.setItem('admin_nav','create')">
+          <div class="tile-icon">+</div>
+          <div class="tile-title">NEW SHOW</div>
+          <div class="tile-desc">Create a new show with venue, lineup, and ticket settings.</div>
+        </a>
+      </div>
+
+      <div style="margin-top:1.4rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api';
+  const KEY_STORE = 'oc_admin_key';
+  let adminKey = sessionStorage.getItem(KEY_STORE) || '';
+
+  document.getElementById('login-btn').addEventListener('click', login);
+  document.getElementById('key-input').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+  async function login() {
+    const key = document.getElementById('key-input').value.trim();
+    if (!key) return;
+
+    try {
+      const res = await fetch(`${API}/admin-shows`, { headers: { 'x-admin-key': key } });
+      if (!res.ok) throw new Error('Invalid key');
+      adminKey = key;
+      sessionStorage.setItem(KEY_STORE, key);
+      showDashboard();
+    } catch {
+      const flash = document.getElementById('login-flash');
+      flash.textContent = '$ invalid key';
+      flash.classList.add('show');
+    }
+  }
+
+  async function showDashboard() {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    document.getElementById('greeting').textContent = `$ ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}`;
+
+    // Load stats
+    try {
+      const [showsRes, comediansRes] = await Promise.all([
+        fetch(`${API}/admin-shows`, { headers: { 'x-admin-key': adminKey } }),
+        fetch(`${API}/admin-comedians`, { headers: { 'x-admin-key': adminKey } }),
+      ]);
+      const shows = await showsRes.json();
+      const comedians = await comediansRes.json();
+
+      const upcoming = Array.isArray(shows) ? shows.filter(s => s.status === 'announced' || s.status === 'draft').length : 0;
+      const completed = Array.isArray(shows) ? shows.filter(s => s.status === 'completed').length : 0;
+      const totalComedians = Array.isArray(comedians) ? comedians.length : 0;
+
+      document.getElementById('stat-shows').textContent = `${upcoming} upcoming / ${completed} completed`;
+      document.getElementById('stat-comedians').textContent = `${totalComedians} in roster`;
+    } catch {}
+  }
+
+  if (adminKey) showDashboard();
+  else document.getElementById('login-section').style.display = 'block';
+</script>
+</body>
+</html>

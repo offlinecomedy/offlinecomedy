@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — COMEDIANS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff41; --green-dim:#00b32c; --green-dark:#003b0f; --yellow:#ffd700; --red:#ff4444; --bg:#050505; }
+    body { background:var(--bg); color:var(--green); font-family:'Share Tech Mono','Courier New',monospace; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:2rem 1rem; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,rgba(0,255,65,.025) 0px,rgba(0,255,65,.025) 1px,transparent 1px,transparent 2px); pointer-events:none; z-index:999; }
+    .terminal { width:100%; max-width:800px; border:1px solid var(--green-dim); border-radius:4px; box-shadow:0 0 24px rgba(0,255,65,.18); overflow:hidden; }
+    .terminal-bar { background:var(--green-dark); border-bottom:1px solid var(--green-dim); padding:8px 14px; display:flex; align-items:center; gap:10px; }
+    .dots { display:flex; gap:6px; }
+    .dot { width:11px; height:11px; border-radius:50%; background:var(--green-dim); opacity:.45; }
+    .terminal-title { flex:1; text-align:center; font-size:.68rem; color:var(--green-dim); letter-spacing:.18em; }
+    .terminal-body { padding:1.4rem 1.6rem 2rem; background:var(--bg); }
+    .ln { font-size:.82rem; line-height:1.65; }
+    .dim { color:var(--green-dim); }
+    .bright { color:var(--green); text-shadow:0 0 8px rgba(0,255,65,.55); }
+    .yellow { color:var(--yellow); }
+    .sep { border:none; border-top:1px solid var(--green-dark); margin:.8rem 0; }
+    .section-label { font-size:.72rem; color:var(--green-dim); letter-spacing:.15em; margin:.8rem 0 .4rem; text-transform:uppercase; }
+
+    .input-row { display:flex; align-items:center; border:1px solid var(--green-dark); background:#0a0a0a; transition:border-color .2s; }
+    .input-row:focus-within { border-color:var(--green); box-shadow:0 0 10px rgba(0,255,65,.2); }
+    .input-pfx { padding:.5rem .65rem; color:var(--green-dim); font-size:.85rem; }
+    input[type="text"], input[type="email"], input[type="number"] {
+      background:transparent; border:none; outline:none; color:var(--green); font-family:inherit; font-size:.85rem; width:100%; padding:.5rem .5rem .5rem 0;
+    }
+    input::placeholder { color:#1c4827; }
+
+    .btn { background:transparent; border:1px solid var(--green); color:var(--green); font-family:inherit; font-size:.78rem; padding:.45rem .9rem; cursor:pointer; letter-spacing:.12em; text-transform:uppercase; transition:background .18s, color .18s; }
+    .btn:hover { background:var(--green); color:#000; }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-sm { font-size:.7rem; padding:.3rem .6rem; }
+
+    .flash { font-size:.76rem; padding:.4rem .7rem; border:1px solid; margin:.5rem 0; display:none; }
+    .flash.err { border-color:var(--red); color:var(--red); }
+    .flash.ok { border-color:var(--green); color:var(--green); }
+    .flash.show { display:block; }
+
+    .back-link { display:inline-block; margin-top:1.2rem; font-size:.75rem; color:var(--green-dim); text-decoration:none; letter-spacing:.1em; }
+    .back-link:hover { color:var(--green); }
+
+    /* Comedian list */
+    .comedian-row {
+      border:1px solid var(--green-dark); padding:.5rem .7rem; margin-bottom:.4rem;
+      background:rgba(0,255,65,.02); cursor:pointer; display:flex; align-items:center; gap:.6rem;
+      transition:border-color .15s;
+    }
+    .comedian-row:hover { border-color:var(--green-dim); }
+    .c-name { font-size:.8rem; color:var(--green); flex:1; min-width:120px; }
+    .c-ig { font-size:.68rem; color:var(--green-dim); min-width:100px; }
+    .c-followers { font-size:.68rem; color:var(--green-dim); min-width:60px; text-align:right; }
+    .c-1099 { font-size:.66rem; padding:.1rem .35rem; border:1px solid; border-radius:2px; }
+    .c-1099.not_started { border-color:var(--red); color:var(--red); }
+    .c-1099.pending { border-color:var(--yellow); color:var(--yellow); }
+    .c-1099.complete { border-color:var(--green); color:var(--green); }
+    .c-balance { font-size:.7rem; color:var(--yellow); min-width:60px; text-align:right; }
+
+    .stats-bar { display:flex; gap:1.2rem; flex-wrap:wrap; font-size:.72rem; color:var(--green-dim); margin-bottom:.8rem; }
+    .stats-bar em { color:var(--green); font-style:normal; }
+
+    /* Add form */
+    .add-form { border:1px solid var(--green-dark); padding:.8rem; margin-top:.5rem; background:rgba(0,255,65,.02); display:none; }
+    .add-form .form-row { display:flex; gap:.5rem; margin-bottom:.4rem; flex-wrap:wrap; }
+    .add-form .form-row > * { flex:1; min-width:120px; }
+    .add-form label { font-size:.68rem; color:var(--green-dim); display:block; margin-bottom:.2rem; }
+
+    .cur { display:inline-block; width:8px; height:.9em; background:var(--green); vertical-align:text-bottom; animation:blink 1s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  </style>
+</head>
+<body>
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — comedian_roster.enc</div>
+  </div>
+  <div class="terminal-body">
+    <div style="display:flex; align-items:center; gap:.8rem; margin-bottom:.3rem;">
+      <div class="ln bright">[ COMEDIAN ROSTER ]</div>
+    </div>
+
+    <div class="stats-bar" id="stats-bar"></div>
+
+    <!-- Search -->
+    <div style="margin-bottom:.8rem;">
+      <div class="input-row">
+        <span class="input-pfx">$&gt;</span>
+        <input type="text" id="search-input" placeholder="Search by name..." />
+      </div>
+    </div>
+
+    <!-- Add button -->
+    <div style="margin-bottom:.8rem;">
+      <button class="btn btn-sm" id="toggle-add-btn">+ Add comedian</button>
+    </div>
+
+    <!-- Add form -->
+    <div class="add-form" id="add-form">
+      <div class="form-row">
+        <div><label>NAME *</label><input type="text" id="add-name" placeholder="Full name" /></div>
+        <div><label>INSTAGRAM</label><input type="text" id="add-ig" placeholder="handle (no @)" /></div>
+      </div>
+      <div class="form-row">
+        <div><label>EMAIL</label><input type="email" id="add-email" placeholder="email" /></div>
+        <div><label>PHONE</label><input type="text" id="add-phone" placeholder="(555) 000-0000" /></div>
+      </div>
+      <div class="form-row">
+        <div><label>VENMO</label><input type="text" id="add-venmo" placeholder="venmo handle" /></div>
+        <div><label>FOLLOWERS</label><input type="number" id="add-followers" placeholder="0" /></div>
+      </div>
+      <div style="margin-top:.5rem; display:flex; gap:.5rem;">
+        <button class="btn btn-sm" id="save-add-btn">Save</button>
+        <button class="btn btn-sm" id="cancel-add-btn" style="border-color:var(--green-dim); color:var(--green-dim);">Cancel</button>
+      </div>
+      <div id="add-flash" class="flash"></div>
+    </div>
+
+    <!-- List -->
+    <div id="comedian-list"></div>
+
+    <a href="admin-dashboard.html" class="back-link">&lt; back to dashboard</a>
+    <div style="margin-top:1rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api';
+  const adminKey = sessionStorage.getItem('oc_admin_key');
+  if (!adminKey) window.location.href = 'admin-dashboard.html';
+
+  let allComedians = [];
+
+  // Toggle add form
+  document.getElementById('toggle-add-btn').addEventListener('click', () => {
+    const form = document.getElementById('add-form');
+    form.style.display = form.style.display === 'none' ? 'block' : 'none';
+  });
+  document.getElementById('cancel-add-btn').addEventListener('click', () => {
+    document.getElementById('add-form').style.display = 'none';
+  });
+
+  // Save new comedian
+  document.getElementById('save-add-btn').addEventListener('click', async () => {
+    const name = document.getElementById('add-name').value.trim();
+    if (!name) { flashMsg('add-flash', 'Name is required', 'err'); return; }
+
+    const btn = document.getElementById('save-add-btn');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/admin-comedians`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({
+          name,
+          instagram: document.getElementById('add-ig').value.trim() || null,
+          email: document.getElementById('add-email').value.trim() || null,
+          phone: document.getElementById('add-phone').value.trim() || null,
+          venmo: document.getElementById('add-venmo').value.trim() || null,
+          followers: parseInt(document.getElementById('add-followers').value) || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      // Clear form
+      ['add-name','add-ig','add-email','add-phone','add-venmo','add-followers'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('add-form').style.display = 'none';
+      loadComedians();
+    } catch (err) {
+      flashMsg('add-flash', err.message, 'err');
+    }
+    btn.disabled = false;
+  });
+
+  function flashMsg(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = '$ ' + msg;
+    el.className = `flash ${type} show`;
+  }
+
+  // Search
+  let searchTimeout;
+  document.getElementById('search-input').addEventListener('input', (e) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => filterComedians(e.target.value), 200);
+  });
+
+  function filterComedians(query) {
+    const q = query.toLowerCase();
+    const filtered = q ? allComedians.filter(c => c.name.toLowerCase().includes(q)) : allComedians;
+    renderList(filtered);
+  }
+
+  async function loadComedians() {
+    try {
+      const res = await fetch(`${API}/admin-comedians`, {
+        headers: { 'x-admin-key': adminKey },
+      });
+      allComedians = await res.json();
+      if (!Array.isArray(allComedians)) throw new Error(allComedians.error);
+
+      // Sort alphabetically
+      allComedians.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Stats
+      const total = allComedians.length;
+      const onboarded = allComedians.filter(c => c.onboarding_status === 'complete').length;
+      document.getElementById('stats-bar').innerHTML =
+        `TOTAL: <em>${total}</em> &nbsp; 1099 COMPLETE: <em>${onboarded}</em> &nbsp; PENDING: <em>${allComedians.filter(c => c.onboarding_status === 'pending').length}</em>`;
+
+      renderList(allComedians);
+    } catch (err) {
+      document.getElementById('comedian-list').innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
+    }
+  }
+
+  function renderList(comedians) {
+    const listEl = document.getElementById('comedian-list');
+
+    if (comedians.length === 0) {
+      listEl.innerHTML = '<div class="ln dim">$ no comedians found</div>';
+      return;
+    }
+
+    listEl.innerHTML = '';
+
+    comedians.forEach(c => {
+      const row = document.createElement('div');
+      row.className = 'comedian-row';
+
+      const onboardClass = c.onboarding_status || 'not_started';
+      const onboardLabel = onboardClass === 'complete' ? '1099' : onboardClass === 'pending' ? 'PENDING' : 'NO 1099';
+
+      row.innerHTML = `
+        <span class="c-name">${c.name}</span>
+        <span class="c-ig">${c.instagram ? '@' + c.instagram : ''}</span>
+        <span class="c-followers">${c.followers ? c.followers.toLocaleString() : '—'}</span>
+        <span class="c-1099 ${onboardClass}">${onboardLabel}</span>
+      `;
+
+      row.addEventListener('click', () => {
+        window.location.href = `admin-comedian.html?id=${c.id}`;
+      });
+
+      listEl.appendChild(row);
+    });
+  }
+
+  loadComedians();
+</script>
+</body>
+</html>
