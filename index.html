@@ -540,7 +540,8 @@
         const zip   = document.getElementById('zip').value.trim();
         localStorage.setItem('oc_phone', phone);
         const welcome = data.isNew ? 'new' : 'returning';
-        window.location.href = `shows.html?zip=${encodeURIComponent(zip)}&welcome=${welcome}`;
+        const ticketParam = data.hasTickets ? '&tickets=1' : '';
+        window.location.href = `shows.html?zip=${encodeURIComponent(zip)}&welcome=${welcome}${ticketParam}`;
       } else {
         btn.textContent = 'Error — try again';
         btn.disabled = false;

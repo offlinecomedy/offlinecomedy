@@ -14,6 +14,7 @@
       --green-dim:  #00b32c;
       --green-dark: #003b0f;
       --yellow:     #ffd700;
+      --red:        #ff4444;
       --bg:         #050505;
     }
 
@@ -30,45 +31,31 @@
 
     body::before {
       content: '';
-      position: fixed;
-      inset: 0;
-      background: repeating-linear-gradient(
-        0deg,
-        rgba(0,255,65,0.025) 0px,
-        rgba(0,255,65,0.025) 1px,
-        transparent 1px,
-        transparent 2px
-      );
-      pointer-events: none;
-      z-index: 999;
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(0,255,65,0.025) 0px, rgba(0,255,65,0.025) 1px, transparent 1px, transparent 2px);
+      pointer-events: none; z-index: 999;
     }
 
     body::after {
       content: '';
-      position: fixed;
-      inset: 0;
+      position: fixed; inset: 0;
       background: rgba(0,255,65,0.012);
-      pointer-events: none;
-      z-index: 998;
+      pointer-events: none; z-index: 998;
       animation: flicker 9s infinite;
     }
 
     @keyframes flicker {
       0%,94%,100% { opacity: 1; }
-      95%          { opacity: 0.82; }
-      96%          { opacity: 1; }
-      97.5%        { opacity: 0.88; }
-      99%          { opacity: 1; }
+      95%  { opacity: 0.82; }
+      96%  { opacity: 1; }
+      97.5%{ opacity: 0.88; }
+      99%  { opacity: 1; }
     }
 
     .terminal {
-      width: 100%;
-      max-width: 740px;
-      border: 1px solid var(--green-dim);
-      border-radius: 4px;
-      box-shadow:
-        0 0 24px rgba(0,255,65,0.18),
-        0 0 80px rgba(0,255,65,0.06);
+      width: 100%; max-width: 740px;
+      border: 1px solid var(--green-dim); border-radius: 4px;
+      box-shadow: 0 0 24px rgba(0,255,65,0.18), 0 0 80px rgba(0,255,65,0.06);
       overflow: hidden;
     }
 
@@ -76,42 +63,28 @@
       background: var(--green-dark);
       border-bottom: 1px solid var(--green-dim);
       padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      display: flex; align-items: center; gap: 10px;
     }
 
     .dots { display: flex; gap: 6px; }
     .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: 0.45; }
 
     .terminal-title {
-      flex: 1;
-      text-align: center;
-      font-size: 0.68rem;
-      color: var(--green-dim);
-      letter-spacing: 0.18em;
+      flex: 1; text-align: center;
+      font-size: 0.68rem; color: var(--green-dim); letter-spacing: 0.18em;
     }
 
-    .terminal-body {
-      padding: 1.4rem 1.6rem 2rem;
-      background: var(--bg);
-    }
+    .terminal-body { padding: 1.4rem 1.6rem 2rem; background: var(--bg); }
 
-    .ln {
-      font-size: 0.82rem;
-      line-height: 1.65;
-      white-space: pre;
-    }
+    .ln { font-size: 0.82rem; line-height: 1.65; white-space: pre; }
     .ln.title  { color: var(--green); font-size: 0.88rem; letter-spacing: 0.06em; }
     .ln.dim    { color: var(--green-dim); }
     .ln.bright { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,0.55); }
     .ln.yellow { color: var(--yellow); }
 
     .cur {
-      display: inline-block;
-      width: 8px; height: 0.9em;
-      background: var(--green);
-      vertical-align: text-bottom;
+      display: inline-block; width: 8px; height: 0.9em;
+      background: var(--green); vertical-align: text-bottom;
       animation: blink 1s step-end infinite;
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
@@ -119,113 +92,177 @@
     /* ── Shows list ── */
     #shows-list { margin-top: 0.6rem; }
 
-    .sep {
-      border: none;
-      border-top: 1px solid var(--green-dark);
-      margin: 0.5rem 0;
-    }
+    .sep { border: none; border-top: 1px solid var(--green-dark); margin: 0.5rem 0; }
 
-    .show-row {
-      cursor: pointer;
-      user-select: none;
-    }
+    .show-row { cursor: pointer; user-select: none; }
 
     .show-header {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      padding: 0.55rem 0;
-      font-size: 0.84rem;
-      color: var(--green);
+      display: flex; align-items: center; gap: 0.8rem;
+      padding: 0.55rem 0; font-size: 0.84rem; color: var(--green);
       transition: text-shadow 0.15s;
     }
-    .show-header:hover {
-      text-shadow: 0 0 10px rgba(0,255,65,0.6);
-    }
+    .show-header:hover { text-shadow: 0 0 10px rgba(0,255,65,0.6); }
 
     .show-arrow {
-      font-size: 0.7rem;
-      color: var(--green-dim);
-      min-width: 0.9rem;
+      font-size: 0.7rem; color: var(--green-dim); min-width: 0.9rem;
       transition: transform 0.2s;
     }
-    .show-row.open .show-arrow {
-      transform: rotate(90deg);
-    }
+    .show-row.open .show-arrow { transform: rotate(90deg); }
 
-    .show-date {
-      color: var(--yellow);
-      letter-spacing: 0.05em;
-    }
+    .show-date { color: var(--yellow); letter-spacing: 0.05em; }
+    .show-city { letter-spacing: 0.12em; text-transform: uppercase; }
+    .show-miles { margin-left: auto; font-size: 0.72rem; color: var(--green-dim); }
 
-    .show-city {
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .show-miles {
-      margin-left: auto;
-      font-size: 0.72rem;
-      color: var(--green-dim);
-    }
-
-    /* Expanded detail panel */
     .show-detail {
       display: none;
       padding: 0.5rem 0 0.8rem 1.7rem;
       border-left: 1px solid var(--green-dark);
-      margin-left: 0.45rem;
-      margin-bottom: 0.4rem;
+      margin-left: 0.45rem; margin-bottom: 0.4rem;
     }
     .show-row.open .show-detail { display: block; }
 
     .detail-row {
-      font-size: 0.78rem;
-      line-height: 1.9;
-      color: var(--green-dim);
-      white-space: pre;
+      font-size: 0.78rem; line-height: 1.9;
+      color: var(--green-dim); white-space: pre;
     }
     .detail-row em { color: var(--green); font-style: normal; }
-    .detail-row.yellow { color: var(--yellow); }
 
     .btn-tickets {
-      display: inline-block;
-      margin-top: 0.9rem;
-      background: transparent;
-      border: 1px solid var(--green);
-      color: var(--green);
-      font-family: inherit;
-      font-size: 0.78rem;
-      padding: 0.5rem 1.1rem;
-      cursor: pointer;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      text-decoration: none;
+      display: inline-block; margin-top: 0.9rem;
+      background: transparent; border: 1px solid var(--green);
+      color: var(--green); font-family: inherit; font-size: 0.78rem;
+      padding: 0.5rem 1.1rem; cursor: pointer;
+      letter-spacing: 0.2em; text-transform: uppercase; text-decoration: none;
       transition: background 0.18s, box-shadow 0.18s, color 0.18s;
     }
     .btn-tickets:hover {
-      background: var(--green);
-      color: #000;
+      background: var(--green); color: #000;
       box-shadow: 0 0 18px rgba(0,255,65,0.4);
     }
     .btn-tickets::before { content: '> '; }
 
     .no-shows {
-      margin-top: 0.8rem;
-      font-size: 0.82rem;
-      color: var(--green-dim);
-      line-height: 1.8;
+      margin-top: 0.8rem; font-size: 0.82rem;
+      color: var(--green-dim); line-height: 1.8;
     }
 
     .back-link {
-      display: inline-block;
-      margin-top: 1.4rem;
-      font-size: 0.75rem;
-      color: var(--green-dim);
-      text-decoration: none;
-      letter-spacing: 0.1em;
+      display: inline-block; margin-top: 1.4rem;
+      font-size: 0.75rem; color: var(--green-dim);
+      text-decoration: none; letter-spacing: 0.1em;
     }
     .back-link:hover { color: var(--green); }
+
+    /* ── My Tickets Section ── */
+    #my-tickets { display: none; margin-top: 0.6rem; }
+
+    .mt-header {
+      display: flex; align-items: center; gap: .8rem;
+      cursor: pointer; padding: 0.4rem 0;
+    }
+    .mt-header:hover { text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+
+    .ticket-card {
+      border: 1px solid var(--green-dark);
+      padding: .7rem .9rem; margin-bottom: .5rem;
+      background: rgba(0,255,65,.02);
+    }
+    .ticket-card .row {
+      font-size: .76rem; line-height: 1.85;
+      color: var(--green-dim);
+    }
+    .ticket-card .row em { color: var(--green); font-style: normal; }
+    .ticket-card .row.loc { color: var(--yellow); }
+    .ticket-card .row.loc em { color: var(--yellow); }
+
+    .venue-reveal {
+      border: 1px solid var(--yellow);
+      background: rgba(255,215,0,.04);
+      padding: .5rem .7rem; margin-top: .4rem;
+    }
+    .venue-reveal .row { color: var(--yellow); }
+    .venue-reveal .row em { color: var(--yellow); }
+
+    /* Verify inline */
+    .verify-box {
+      border: 1px solid var(--yellow);
+      padding: .8rem; margin-top: .5rem;
+      background: rgba(255,215,0,.03);
+    }
+    .verify-box .input-row {
+      display: flex; align-items: center;
+      border: 1px solid var(--green-dark); background: #0a0a0a;
+      margin-top: .4rem;
+    }
+    .verify-box .input-row:focus-within { border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,65,.2); }
+    .verify-box .input-pfx { padding: .4rem .5rem; color: var(--green-dim); font-size: .8rem; }
+    .verify-box input {
+      background: transparent; border: none; outline: none;
+      color: var(--green); font-family: inherit; font-size: .85rem;
+      width: 100%; padding: .4rem .4rem .4rem 0; caret-color: var(--green);
+    }
+    .verify-box input::placeholder { color: #1c4827; }
+    .verify-box .btn {
+      background: transparent; border: 1px solid var(--green);
+      color: var(--green); font-family: inherit; font-size: .75rem;
+      padding: .4rem .8rem; cursor: pointer; letter-spacing: .15em;
+      text-transform: uppercase; margin-top: .5rem; width: 100%;
+      transition: background .18s, color .18s;
+    }
+    .verify-box .btn:hover { background: var(--green); color: #000; }
+    .verify-box .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .verify-flash {
+      font-size: .72rem; margin-top: .3rem; min-height: 1em;
+    }
+    .verify-flash.err { color: var(--red); }
+    .verify-flash.ok  { color: var(--green); }
+
+    .section-label {
+      font-size: .7rem; color: var(--green-dim); letter-spacing: .15em;
+      margin: .6rem 0 .3rem; text-transform: uppercase;
+    }
+
+    /* Feedback */
+    .stars { display: flex; gap: .3rem; margin-top: .3rem; }
+    .star {
+      font-size: 1.2rem; cursor: pointer; color: var(--green-dark);
+      transition: color .15s;
+    }
+    .star.active { color: var(--yellow); text-shadow: 0 0 8px rgba(255,215,0,.5); }
+    .star:hover { color: var(--yellow); }
+    .feedback-done { font-size: .72rem; color: var(--green-dim); margin-top: .4rem; }
+
+    textarea {
+      background: #0a0a0a; border: 1px solid var(--green-dark);
+      color: var(--green); font-family: inherit; font-size: .78rem;
+      width: 100%; padding: .4rem; min-height: 50px; resize: vertical;
+      outline: none; caret-color: var(--green); margin-top: .4rem;
+    }
+    textarea:focus { border-color: var(--green); }
+    textarea::placeholder { color: #1c4827; }
+
+    .btn-sm {
+      background: transparent; border: 1px solid var(--green);
+      color: var(--green); font-family: inherit; font-size: .7rem;
+      padding: .3rem .6rem; cursor: pointer; letter-spacing: .12em;
+      text-transform: uppercase; margin-top: .4rem;
+      transition: background .18s, color .18s;
+    }
+    .btn-sm:hover { background: var(--green); color: #000; }
+    .btn-sm:disabled { opacity: .4; cursor: not-allowed; }
+
+    .comedian-tags { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .2rem; }
+    .comedian-tag {
+      font-size: .66rem; padding: .15rem .4rem;
+      border: 1px solid var(--green-dark); color: var(--green-dim);
+    }
+
+    .my-tickets-link {
+      display: inline-block; margin-top: .6rem;
+      font-size: .74rem; color: var(--yellow); cursor: pointer;
+      text-decoration: underline; letter-spacing: .08em;
+    }
+    .my-tickets-link:hover { text-shadow: 0 0 8px rgba(255,215,0,.4); }
   </style>
 </head>
 <body>
@@ -238,6 +275,7 @@
 
   <div class="terminal-body">
     <div id="boot"></div>
+    <div id="my-tickets"></div>
     <div id="shows-list" style="display:none"></div>
     <div id="idle" style="display:none">
       <a href="index.html" class="back-link">&lt; back to underground</a>
@@ -247,14 +285,19 @@
 </div>
 
 <script>
-  const API = 'https://offlinecomedy-backend.vercel.app/api/shows';
+  const API_BASE = 'https://offlinecomedy-backend.vercel.app/api';
+  const API = API_BASE + '/shows';
 
-  const params  = new URLSearchParams(window.location.search);
-  const zip     = params.get('zip') || '';
-  const welcome = params.get('welcome') || 'new';
-  const bootEl  = document.getElementById('boot');
-  const listEl  = document.getElementById('shows-list');
-  const idleEl  = document.getElementById('idle');
+  const params    = new URLSearchParams(window.location.search);
+  const zip       = params.get('zip') || '';
+  const welcome   = params.get('welcome') || 'new';
+  const hasTickets = params.get('tickets') === '1';
+  const bootEl    = document.getElementById('boot');
+  const listEl    = document.getElementById('shows-list');
+  const idleEl    = document.getElementById('idle');
+  const mtEl      = document.getElementById('my-tickets');
+
+  let guestToken  = localStorage.getItem('guest_token');
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
@@ -284,6 +327,7 @@
     return '<em style="color:var(--yellow)">COMING SOON</em>';
   }
 
+  // ── SHOWS LIST ──
   function renderShows(shows) {
     listEl.style.display = 'block';
 
@@ -299,7 +343,7 @@
     const count = shows.length;
     const header = document.createElement('div');
     header.className = 'ln yellow';
-    header.textContent = `[ ${count} SHOW${count !== 1 ? 'S' : ''} WITHIN 25 MILES ]`;
+    header.textContent = `[ ${count} SHOW${count !== 1 ? 'S' : ''} NEAR YOU ]`;
     listEl.appendChild(header);
 
     shows.forEach(show => {
@@ -312,7 +356,7 @@
         <div class="show-header">
           <span class="show-arrow">&#9654;</span>
           <span class="show-date">${show.date}</span>
-          <span class="ln dim">·</span>
+          <span class="ln dim">&middot;</span>
           <span class="show-city">${show.city}</span>
           <span class="show-miles">${show.show_time || ''}</span>
         </div>
@@ -329,7 +373,7 @@
           ${isAnnounced && (show.tickets_remaining === null || show.tickets_remaining > 0)
             ? `<a class="btn-tickets" href="tickets.html?show_id=${show.id}">Secure your spot</a>`
             : isAnnounced && show.tickets_remaining <= 0
-            ? `<div style="margin-top:0.7rem;font-size:0.75rem;color:var(--red, #ff4444)">// SOLD OUT</div>`
+            ? `<div style="margin-top:0.7rem;font-size:0.75rem;color:var(--red)">// SOLD OUT</div>`
             : `<div style="margin-top:0.7rem;font-size:0.75rem;color:var(--green-dim)">// you'll be texted when tickets open</div>`
           }
         </div>`;
@@ -346,6 +390,260 @@
     listEl.appendChild(closingSep);
   }
 
+  // ── MY TICKETS ──
+  async function showMyTickets() {
+    mtEl.style.display = 'block';
+
+    // Already have a valid session?
+    if (guestToken) {
+      await loadTickets();
+      return;
+    }
+
+    // Show verify prompt
+    const phone = localStorage.getItem('oc_phone') || '';
+    mtEl.innerHTML = `
+      <hr class="sep" />
+      <div class="ln yellow" style="margin-bottom:.4rem">[ YOUR TICKETS ]</div>
+      <div class="ln dim" style="margin-bottom:.5rem">Verify your phone to view your tickets and show details.</div>
+      <div class="verify-box" id="verify-box">
+        <div id="verify-step-phone">
+          <div class="ln dim" style="font-size:.74rem; margin-bottom:.3rem">PHONE</div>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="tel" id="v-phone" value="${phone}" placeholder="(555) 000-0000" />
+          </div>
+          <button class="btn" id="v-send-btn">Send code</button>
+          <div class="verify-flash" id="v-phone-flash"></div>
+        </div>
+        <div id="verify-step-code" style="display:none">
+          <div class="ln dim" style="font-size:.74rem; margin-bottom:.3rem">ENTER 6-DIGIT CODE</div>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="text" id="v-code" placeholder="000000" maxlength="6" inputmode="numeric" />
+          </div>
+          <button class="btn" id="v-verify-btn">Verify</button>
+          <div class="verify-flash" id="v-code-flash"></div>
+        </div>
+      </div>
+    `;
+
+    // Send code
+    document.getElementById('v-send-btn').addEventListener('click', sendVerifyCode);
+    document.getElementById('v-phone').addEventListener('keydown', e => { if (e.key === 'Enter') sendVerifyCode(); });
+  }
+
+  async function sendVerifyCode() {
+    const phone = document.getElementById('v-phone').value.trim();
+    if (!phone) return;
+
+    const btn = document.getElementById('v-send-btn');
+    const flash = document.getElementById('v-phone-flash');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch(`${API_BASE}/guest-send-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      localStorage.setItem('oc_phone', phone);
+
+      document.getElementById('verify-step-phone').style.display = 'none';
+      document.getElementById('verify-step-code').style.display = 'block';
+      document.getElementById('v-code').focus();
+
+      // Wire up verify
+      document.getElementById('v-verify-btn').addEventListener('click', () => verifyCode(phone));
+      document.getElementById('v-code').addEventListener('keydown', e => { if (e.key === 'Enter') verifyCode(phone); });
+    } catch (err) {
+      flash.textContent = '$ ' + err.message;
+      flash.className = 'verify-flash err';
+      btn.disabled = false;
+      btn.textContent = 'Send code';
+    }
+  }
+
+  async function verifyCode(phone) {
+    const code = document.getElementById('v-code').value.trim();
+    if (!code || code.length !== 6) return;
+
+    const btn = document.getElementById('v-verify-btn');
+    const flash = document.getElementById('v-code-flash');
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+
+    try {
+      const res = await fetch(`${API_BASE}/guest-verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      guestToken = data.token;
+      localStorage.setItem('guest_token', guestToken);
+      await loadTickets();
+    } catch (err) {
+      flash.textContent = '$ ' + err.message;
+      flash.className = 'verify-flash err';
+      btn.disabled = false;
+      btn.textContent = 'Verify';
+    }
+  }
+
+  async function loadTickets() {
+    try {
+      const res = await fetch(`${API_BASE}/guest-tickets`, {
+        headers: { 'x-guest-token': guestToken },
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          localStorage.removeItem('guest_token');
+          guestToken = null;
+          showMyTickets(); // re-show verify
+          return;
+        }
+        throw new Error(data.error);
+      }
+
+      renderMyTickets(data);
+    } catch (err) {
+      mtEl.innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
+    }
+  }
+
+  function renderMyTickets(data) {
+    const { tickets, stats } = data;
+    const upcoming = tickets.filter(t => !t.show.is_past);
+    const past = tickets.filter(t => t.show.is_past);
+
+    let html = '<hr class="sep" />';
+    html += '<div class="ln yellow" style="margin-bottom:.5rem">[ YOUR TICKETS ]</div>';
+
+    if (upcoming.length > 0) {
+      upcoming.forEach(t => { html += buildTicketHTML(t); });
+    }
+
+    if (past.length > 0) {
+      html += '<div class="section-label" style="margin-top:.8rem">past shows</div>';
+      past.forEach(t => { html += buildTicketHTML(t); });
+    }
+
+    if (tickets.length === 0) {
+      html += '<div class="ln dim">$ no tickets found</div>';
+    }
+
+    // Stats
+    if (stats.shows_attended > 0) {
+      html += `<div class="ln dim" style="margin-top:.6rem; font-size:.72rem">
+        SHOWS: ${stats.shows_attended} &middot; COMEDIANS SEEN: ${stats.comedians_seen.length}
+      </div>`;
+    }
+
+    mtEl.innerHTML = html;
+    mtEl.style.display = 'block';
+
+    // Wire up feedback forms
+    tickets.filter(t => t.show.is_past && !t.has_feedback).forEach(t => {
+      wireUpFeedback(t.order_id);
+    });
+  }
+
+  function buildTicketHTML(t) {
+    let venueHTML = '';
+    if (t.show.venue) {
+      venueHTML = `
+        <div class="venue-reveal">
+          <div class="row loc">VENUE ........ <em>${t.show.venue.name}</em></div>
+          <div class="row loc">ADDRESS ...... <em>${t.show.venue.address}</em></div>
+          <div class="row loc">             <em>${t.show.venue.city}, ${t.show.venue.state} ${t.show.venue.zip_code}</em></div>
+        </div>`;
+    } else if (!t.show.is_past && !t.show.location_revealed) {
+      venueHTML = `<div class="row">LOCATION ..... <em>CLASSIFIED</em> <span style="font-size:.64rem;color:var(--green-dim)">// 24hrs before show</span></div>`;
+    }
+
+    let comediansHTML = '';
+    if (t.show.comedians && t.show.comedians.length > 0) {
+      comediansHTML = `<div class="comedian-tags">${t.show.comedians.map(c =>
+        `<span class="comedian-tag">${c.name}</span>`
+      ).join('')}</div>`;
+    }
+
+    let feedbackHTML = '';
+    if (t.show.is_past && !t.has_feedback) {
+      feedbackHTML = `
+        <div style="margin-top:.5rem; border-top:1px solid var(--green-dark); padding-top:.5rem" id="fb-wrap-${t.order_id}">
+          <div class="row" style="margin-bottom:.2rem">HOW WAS IT?</div>
+          <div class="stars" id="stars-${t.order_id}">
+            ${[1,2,3,4,5].map(n => `<span class="star" data-val="${n}">&#9733;</span>`).join('')}
+          </div>
+          <textarea id="comment-${t.order_id}" placeholder="Any thoughts? (optional)"></textarea>
+          <button class="btn-sm" id="fb-btn-${t.order_id}">Submit</button>
+        </div>`;
+    } else if (t.show.is_past && t.has_feedback) {
+      feedbackHTML = `<div class="feedback-done">&#10003; Thanks for the feedback!</div>`;
+    }
+
+    return `
+      <div class="ticket-card${t.show.is_past ? ' past' : ''}">
+        <div class="row">DATE ......... <em>${t.show.date}</em></div>
+        <div class="row">CITY ......... <em>${t.show.city ? t.show.city.toUpperCase() : ''}</em></div>
+        ${t.show.show_time ? `<div class="row">TIME ......... <em>${t.show.show_time}</em></div>` : ''}
+        <div class="row">TICKETS ...... <em>${t.quantity}</em></div>
+        ${venueHTML}
+        ${comediansHTML}
+        ${feedbackHTML}
+      </div>`;
+  }
+
+  function wireUpFeedback(orderId) {
+    let selectedRating = 0;
+    const starsEl = document.getElementById(`stars-${orderId}`);
+    if (!starsEl) return;
+
+    starsEl.querySelectorAll('.star').forEach(star => {
+      star.addEventListener('click', () => {
+        selectedRating = parseInt(star.dataset.val);
+        starsEl.querySelectorAll('.star').forEach((s, i) => {
+          s.classList.toggle('active', i < selectedRating);
+        });
+      });
+    });
+
+    const fbBtn = document.getElementById(`fb-btn-${orderId}`);
+    if (fbBtn) {
+      fbBtn.addEventListener('click', async () => {
+        if (selectedRating === 0) return;
+        fbBtn.disabled = true;
+        fbBtn.textContent = 'Sending...';
+        try {
+          const comment = document.getElementById(`comment-${orderId}`).value.trim();
+          const res = await fetch(`${API_BASE}/guest-feedback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-guest-token': guestToken },
+            body: JSON.stringify({ order_id: orderId, rating: selectedRating, comment }),
+          });
+          if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+          const wrap = document.getElementById(`fb-wrap-${orderId}`);
+          wrap.innerHTML = '<div class="feedback-done">&#10003; Thanks for the feedback!</div>';
+        } catch (err) {
+          fbBtn.disabled = false;
+          fbBtn.textContent = 'Submit';
+          alert(err.message);
+        }
+      });
+    }
+  }
+
+  // ── BOOT SEQUENCE ──
   async function run() {
     appendLine('OFFLINE COMEDY  //  show_schedule.enc', 'title');
     appendLine('─'.repeat(52), 'dim');
@@ -366,6 +664,15 @@
     }
 
     appendLine('', 'dim');
+
+    // If they have tickets, show that section
+    if (hasTickets || guestToken) {
+      await sleep(200);
+      await animateLine('$ checking your tickets ...................', 'dim', 'FOUND', 'var(--yellow)');
+      appendLine('', 'dim');
+      await showMyTickets();
+    }
+
     await sleep(400);
     await animateLine(`$ scanning for shows near ${zip || '...'} ......`, 'dim', 'OK');
     await sleep(400);
@@ -374,9 +681,7 @@
     try {
       const res  = await fetch(`${API}?zip=${encodeURIComponent(zip)}`);
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || 'Unknown error');
-
       renderShows(data);
     } catch (err) {
       const errLine = document.createElement('div');
