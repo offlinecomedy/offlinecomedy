@@ -101,53 +101,94 @@
     .btn:hover  { background: var(--green); color: #000; box-shadow: 0 0 18px rgba(0,255,65,.4); }
     .btn:disabled { opacity: .4; cursor: not-allowed; }
     .btn-sm { padding: .35rem .7rem; font-size: .72rem; }
+    .btn-red { border-color: var(--red); color: var(--red); }
+    .btn-red:hover { background: var(--red); color: #000; box-shadow: 0 0 18px rgba(255,68,68,.4); }
 
     .flash { font-size: .78rem; padding: .5rem .8rem; border: 1px solid; margin-bottom: 1rem; display: none; }
     .flash.err { border-color: var(--red); color: var(--red); }
     .flash.show { display: block; }
 
+    /* Progress bar */
+    .progress-wrap {
+      margin-bottom: 1.2rem;
+    }
+    .progress-labels {
+      display: flex; justify-content: space-between; font-size: .72rem; margin-bottom: .35rem;
+    }
+    .progress-labels .lbl-in  { color: var(--green); }
+    .progress-labels .lbl-out { color: var(--yellow); }
+    .progress-bar {
+      width: 100%; height: 18px;
+      background: var(--green-dark);
+      border: 1px solid var(--green-dark);
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--green);
+      box-shadow: 0 0 10px rgba(0,255,65,.5);
+      transition: width .4s ease;
+    }
+    .progress-text {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: .68rem; color: #000; font-weight: bold;
+      mix-blend-mode: difference;
+      color: var(--green-dim);
+    }
+
     /* Guest list */
     .guest-list { margin-top: .5rem; }
+
+    .section-label {
+      font-size: .7rem; color: var(--green-dim); letter-spacing: .15em;
+      margin: .8rem 0 .4rem; text-transform: uppercase;
+    }
 
     .guest-row {
       border: 1px solid var(--green-dark);
       padding: .7rem .9rem;
       margin-bottom: .5rem;
       background: rgba(0,255,65,.02);
-      display: flex;
-      align-items: center;
-      gap: .8rem;
-      flex-wrap: wrap;
     }
     .guest-row.checked-in {
-      border-color: var(--green-dim);
-      background: rgba(0,255,65,.06);
+      border-color: rgba(0,255,65,.15);
+      background: rgba(0,255,65,.04);
+      opacity: .7;
     }
 
-    .guest-name { font-size: .82rem; color: var(--green); flex: 1; min-width: 120px; }
+    .guest-top {
+      display: flex; align-items: center; gap: .8rem;
+    }
+    .guest-name { font-size: .82rem; color: var(--green); flex: 1; min-width: 100px; }
     .guest-info { font-size: .72rem; color: var(--green-dim); }
-    .guest-status { font-size: .72rem; margin-left: auto; }
+    .guest-status { font-size: .72rem; }
     .guest-status.in  { color: var(--green); }
     .guest-status.out { color: var(--yellow); }
 
     .checkin-controls {
       display: flex; align-items: center; gap: .5rem;
-      width: 100%; margin-top: .4rem;
+      margin-top: .5rem;
     }
     .checkin-controls .qty-btn {
       background: transparent; border: 1px solid var(--green-dark);
       color: var(--green-dim); font-family: inherit; font-size: .85rem;
       width: 28px; height: 28px; cursor: pointer; display: flex;
       align-items: center; justify-content: center;
+      transition: border-color .15s, color .15s;
     }
     .checkin-controls .qty-btn:hover { border-color: var(--green); color: var(--green); }
     .checkin-count { font-size: .85rem; color: var(--green); min-width: 1.5rem; text-align: center; }
 
-    .stats-bar {
-      display: flex; gap: 1.2rem; font-size: .75rem; margin-bottom: 1rem;
-      color: var(--green-dim);
+    /* Undo confirmation overlay */
+    .undo-confirm {
+      margin-top: .5rem; padding: .5rem .7rem;
+      border: 1px solid var(--red);
+      background: rgba(255,68,68,.06);
+      display: flex; align-items: center; gap: .6rem; flex-wrap: wrap;
     }
-    .stats-bar em { color: var(--green); font-style: normal; }
+    .undo-confirm .undo-msg { font-size: .72rem; color: var(--red); flex: 1; min-width: 140px; }
 
     #login-section, #checkin-section { display: none; }
 
@@ -172,7 +213,6 @@
     <!-- Login -->
     <div id="login-section">
       <div class="ln bright" style="margin-bottom:1rem">[ STAFF LOGIN ]</div>
-
       <div id="login-flash" class="flash err"></div>
 
       <div class="form-group">
@@ -205,13 +245,13 @@
       </div>
 
       <div id="show-panel" style="display:none">
-        <div class="stats-bar" id="stats-bar"></div>
+        <div class="progress-wrap" id="progress-wrap"></div>
 
         <div class="form-group">
-          <label class="form-label"><em>SEARCH GUEST</em></label>
+          <label class="form-label"><em>SEARCH</em> // name or phone</label>
           <div class="input-row">
             <span class="input-pfx">$&gt;</span>
-            <input type="text" id="search-input" placeholder="Type a name..." />
+            <input type="text" id="search-input" placeholder="Name or phone number..." />
           </div>
         </div>
 
@@ -226,10 +266,11 @@
 <script>
   const API = 'https://offlinecomedy-backend.vercel.app/api';
 
-  let token    = sessionStorage.getItem('staff_token');
-  let staffInfo = JSON.parse(sessionStorage.getItem('staff_info') || 'null');
+  let token       = sessionStorage.getItem('staff_token');
+  let staffInfo   = JSON.parse(sessionStorage.getItem('staff_info') || 'null');
   let currentShowId = null;
-  let guests   = [];
+  let guests      = [];
+  let undoId      = null; // which order is showing undo confirmation
 
   function flashLogin(msg) {
     const el = document.getElementById('login-flash');
@@ -268,7 +309,6 @@
     }
   });
 
-  // Enter key on password field
   document.getElementById('login-pass').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') document.getElementById('login-btn').click();
   });
@@ -277,42 +317,13 @@
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('checkin-section').style.display = 'block';
     document.getElementById('staff-greeting').textContent = `$ logged in as ${staffInfo.name} (${staffInfo.role})`;
-
-    // Load shows for dropdown
-    try {
-      const res = await fetch(`${API}/admin-shows`, {
-        headers: { 'x-admin-key': 'public-shows-list' },
-      });
-      // Fallback: use the show endpoint to get shows
-    } catch {}
-
-    // Use a simpler approach: fetch shows via admin endpoint or a public list
-    // For now, use the admin-shows endpoint with the staff token approach
-    // Actually, let's add show listing to the checkin endpoint
     await loadShowList();
   }
 
   async function loadShowList() {
-    try {
-      // We'll use the public shows endpoint — staff can see all upcoming shows
-      // Get shows with a broad query by fetching admin-shows
-      const res = await fetch(`${API}/admin-shows`, {
-        headers: { 'x-admin-key': process.env?.ADMIN_KEY || '' },
-      });
-      // This won't work without admin key. Let's use a different approach.
-    } catch {}
-
-    // Alternative: fetch announced shows directly from supabase via a simple endpoint
-    // For now, hardcode the show select by using staff's checkin endpoint
     const select = document.getElementById('show-select');
     select.innerHTML = '<option value="">-- Pick a show --</option>';
 
-    // We need a way to list shows for staff. Let's use the checkin GET with no search.
-    // Actually, we need a shows list. Let me fetch from the show endpoint with known IDs.
-    // Best approach: add show listing to checkin endpoint.
-
-    // For MVP: fetch from admin-shows with admin key stored in staff session
-    // OR: create a lightweight endpoint. For now, let's try fetching all shows publicly.
     try {
       const res = await fetch(`${API}/shows-list`, {
         headers: { 'x-staff-token': token },
@@ -335,6 +346,7 @@
     currentShowId = document.getElementById('show-select').value;
     if (currentShowId) {
       document.getElementById('show-panel').style.display = 'block';
+      document.getElementById('search-input').value = '';
       searchGuests('');
     } else {
       document.getElementById('show-panel').style.display = 'none';
@@ -357,20 +369,34 @@
       });
       guests = await res.json();
       if (!res.ok) throw new Error(guests.error);
+      undoId = null;
       renderGuests();
     } catch (err) {
       document.getElementById('guest-list').innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
     }
   }
 
-  function renderGuests() {
-    const listEl = document.getElementById('guest-list');
-
-    // Stats
+  function renderProgressBar() {
     const totalTickets   = guests.reduce((s, g) => s + g.quantity, 0);
     const totalCheckedIn = guests.reduce((s, g) => s + g.checked_in_count, 0);
-    document.getElementById('stats-bar').innerHTML =
-      `GUESTS: <em>${guests.length}</em> &nbsp; TICKETS: <em>${totalTickets}</em> &nbsp; CHECKED IN: <em>${totalCheckedIn}/${totalTickets}</em>`;
+    const pct = totalTickets > 0 ? (totalCheckedIn / totalTickets * 100) : 0;
+    const notIn = totalTickets - totalCheckedIn;
+
+    document.getElementById('progress-wrap').innerHTML = `
+      <div class="progress-labels">
+        <span class="lbl-in">${totalCheckedIn} checked in</span>
+        <span class="lbl-out">${notIn} remaining</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" style="width:${pct}%"></div>
+        <div class="progress-text">${totalCheckedIn} / ${totalTickets}</div>
+      </div>
+    `;
+  }
+
+  function renderGuests() {
+    const listEl = document.getElementById('guest-list');
+    renderProgressBar();
 
     if (guests.length === 0) {
       listEl.innerHTML = '<div class="ln dim">$ no matching guests found</div>';
@@ -379,39 +405,116 @@
 
     listEl.innerHTML = '';
 
-    guests.forEach(g => {
-      const allIn = g.checked_in_count >= g.quantity;
-      const row = document.createElement('div');
-      row.className = 'guest-row' + (allIn ? ' checked-in' : '');
-      row.innerHTML = `
-        <div class="guest-name">${g.buyer_name || 'Unknown'}</div>
-        <div class="guest-info">${g.quantity} ticket${g.quantity > 1 ? 's' : ''}</div>
-        <div class="guest-status ${allIn ? 'in' : 'out'}">${allIn ? 'CHECKED IN' : g.checked_in_count > 0 ? g.checked_in_count + '/' + g.quantity + ' IN' : 'NOT IN'}</div>
+    // Split into not-checked-in and checked-in
+    const notIn = guests.filter(g => g.checked_in_count < g.quantity);
+    const inList = guests.filter(g => g.checked_in_count >= g.quantity);
+
+    if (notIn.length > 0) {
+      notIn.forEach(g => listEl.appendChild(buildGuestRow(g)));
+    }
+
+    if (inList.length > 0) {
+      const divider = document.createElement('div');
+      divider.innerHTML = '<hr class="sep" /><div class="section-label">&#10003; checked in</div>';
+      listEl.appendChild(divider);
+      inList.forEach(g => listEl.appendChild(buildGuestRow(g)));
+    }
+  }
+
+  function buildGuestRow(g) {
+    const allIn = g.checked_in_count >= g.quantity;
+    const row = document.createElement('div');
+    row.className = 'guest-row' + (allIn ? ' checked-in' : '');
+
+    let controlsHTML;
+
+    if (allIn) {
+      // Checked in — show undo button or undo confirmation
+      if (undoId === g.id) {
+        controlsHTML = `
+          <div class="undo-confirm">
+            <span class="undo-msg">Undo check-in for ${g.buyer_name || 'this guest'}?</span>
+            <button class="btn btn-sm btn-red" data-undo-yes="1">Yes, undo</button>
+            <button class="btn btn-sm" data-undo-no="1">Cancel</button>
+          </div>
+        `;
+      } else {
+        controlsHTML = `
+          <div class="checkin-controls">
+            <button class="btn btn-sm btn-red" data-undo-start="1">Undo check-in</button>
+          </div>
+        `;
+      }
+    } else {
+      // Not checked in — show +/- and check in all
+      controlsHTML = `
         <div class="checkin-controls">
           <button class="qty-btn" data-dir="-1" ${g.checked_in_count <= 0 ? 'disabled' : ''}>&#8722;</button>
           <span class="checkin-count">${g.checked_in_count}</span>
           <button class="qty-btn" data-dir="1" ${g.checked_in_count >= g.quantity ? 'disabled' : ''}>+</button>
-          ${!allIn ? `<button class="btn btn-sm" data-all="1" style="margin-left:auto">Check in all</button>` : ''}
+          <button class="btn btn-sm" data-all="1" style="margin-left:auto">Check in all</button>
         </div>
       `;
+    }
 
-      // +/- buttons
-      row.querySelectorAll('.qty-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const dir = parseInt(btn.dataset.dir);
-          const newCount = Math.max(0, Math.min(g.quantity, g.checked_in_count + dir));
+    row.innerHTML = `
+      <div class="guest-top">
+        <div class="guest-name">${g.buyer_name || 'Unknown'}</div>
+        <div class="guest-info">${g.quantity} ticket${g.quantity > 1 ? 's' : ''}</div>
+        <div class="guest-status ${allIn ? 'in' : 'out'}">${allIn ? 'CHECKED IN' : g.checked_in_count > 0 ? g.checked_in_count + '/' + g.quantity + ' IN' : 'NOT IN'}</div>
+      </div>
+      ${controlsHTML}
+    `;
+
+    // +/- buttons
+    row.querySelectorAll('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dir = parseInt(btn.dataset.dir);
+        const newCount = Math.max(0, Math.min(g.quantity, g.checked_in_count + dir));
+        if (newCount < g.checked_in_count) {
+          // Decreasing — show undo confirm
+          undoId = g.id;
+          renderGuests();
+        } else {
           updateCheckin(g.id, newCount);
-        });
+        }
       });
-
-      // Check in all button
-      const allBtn = row.querySelector('[data-all]');
-      if (allBtn) {
-        allBtn.addEventListener('click', () => updateCheckin(g.id, g.quantity));
-      }
-
-      listEl.appendChild(row);
     });
+
+    // Check in all button
+    const allBtn = row.querySelector('[data-all]');
+    if (allBtn) {
+      allBtn.addEventListener('click', () => updateCheckin(g.id, g.quantity));
+    }
+
+    // Undo start
+    const undoStartBtn = row.querySelector('[data-undo-start]');
+    if (undoStartBtn) {
+      undoStartBtn.addEventListener('click', () => {
+        undoId = g.id;
+        renderGuests();
+      });
+    }
+
+    // Undo confirm yes
+    const undoYesBtn = row.querySelector('[data-undo-yes]');
+    if (undoYesBtn) {
+      undoYesBtn.addEventListener('click', () => {
+        undoId = null;
+        updateCheckin(g.id, 0);
+      });
+    }
+
+    // Undo confirm cancel
+    const undoNoBtn = row.querySelector('[data-undo-no]');
+    if (undoNoBtn) {
+      undoNoBtn.addEventListener('click', () => {
+        undoId = null;
+        renderGuests();
+      });
+    }
+
+    return row;
   }
 
   async function updateCheckin(orderId, count) {
@@ -424,7 +527,6 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      // Update local state and re-render
       const guest = guests.find(g => g.id === orderId);
       if (guest) guest.checked_in_count = count;
       renderGuests();
