@@ -433,7 +433,8 @@
         // Clean URL
         window.history.replaceState({}, '', 'comedian-portal.html');
 
-        // Show email setup screen
+        // Show email setup screen, hide others
+        document.getElementById('login-section').style.display = 'none';
         document.getElementById('email-setup-section').style.display = 'block';
         document.getElementById('email-setup-greeting').textContent = `$ welcome, ${data.comedian.name}`;
 
@@ -467,7 +468,7 @@
           }
         });
 
-        document.getElementById('setup-email').addEventListener('keydown', e => {
+        document.getElementById('setup-contact').addEventListener('keydown', e => {
           if (e.key === 'Enter') document.getElementById('setup-email-btn').click();
         });
 
