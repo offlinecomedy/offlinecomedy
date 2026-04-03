@@ -501,8 +501,10 @@
         headers: { 'Content-Type': 'application/json' },
       });
       if (res.ok) {
-        const zip = document.getElementById('zip').value.trim();
-        window.location.href = `shows.html?zip=${encodeURIComponent(zip)}`;
+        const data = await res.json();
+        const zip  = document.getElementById('zip').value.trim();
+        const welcome = data.isNew ? 'new' : 'returning';
+        window.location.href = `shows.html?zip=${encodeURIComponent(zip)}&welcome=${welcome}`;
       } else {
         btn.textContent = 'Error — try again';
         btn.disabled = false;

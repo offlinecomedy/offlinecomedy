@@ -251,6 +251,7 @@
 
   const params  = new URLSearchParams(window.location.search);
   const zip     = params.get('zip') || '';
+  const welcome = params.get('welcome') || 'new';
   const bootEl  = document.getElementById('boot');
   const listEl  = document.getElementById('shows-list');
   const idleEl  = document.getElementById('idle');
@@ -289,9 +290,8 @@
     if (shows.length === 0) {
       listEl.innerHTML = `
         <div class="no-shows">
-          <div>$ no shows found within 25 miles of ${zip || '...'}</div>
-          <div>$ new markets dropping soon.</div>
-          <div>$ you'll be the first to know.</div>
+          <div>$ no shows scheduled near ${zip || '...'} yet.</div>
+          <div>$ you're in the network — we'll text when one drops.</div>
         </div>`;
       return;
     }
@@ -314,7 +314,7 @@
           <span class="show-date">${show.date}</span>
           <span class="ln dim">·</span>
           <span class="show-city">${show.city}</span>
-          <span class="show-miles">${show.miles} mi</span>
+          <span class="show-miles">${show.show_time || ''}</span>
         </div>
         <div class="show-detail">
           <div class="detail-row">DATE ............. <em>${show.date}</em></div>
@@ -348,9 +348,22 @@
     appendLine('', 'dim');
 
     await sleep(300);
-    await animateLine(`$ locating shows near ${zip || '...'} .........`, 'dim', 'OK');
-    await sleep(500);
-    await animateLine('$ decrypting schedule .....................', 'dim', 'OK');
+
+    if (welcome === 'returning') {
+      await animateLine('$ subscriber recognized ...................', 'dim', 'OK');
+      await sleep(200);
+      appendLine('', 'dim');
+      appendLine('[ WELCOME BACK. YOU\'RE STILL IN THE NETWORK. ]', 'bright');
+    } else {
+      await animateLine('$ new subscriber confirmed ................', 'dim', 'OK');
+      await sleep(200);
+      appendLine('', 'dim');
+      appendLine('[ WELCOME TO THE OFFLINE UNDERGROUND. ]', 'bright');
+    }
+
+    appendLine('', 'dim');
+    await sleep(400);
+    await animateLine(`$ scanning for shows near ${zip || '...'} ......`, 'dim', 'OK');
     await sleep(400);
     appendLine('', 'dim');
 
