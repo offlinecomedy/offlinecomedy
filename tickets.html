@@ -449,8 +449,9 @@
             }
             current--;
             countEl.textContent = current + ' tickets';
-            countEl.style.textShadow = '0 0 12px rgba(0,255,65,.8)';
-            setTimeout(() => { countEl.style.textShadow = ''; }, 120);
+            countEl.style.color = '#ffd700';
+            countEl.style.textShadow = '0 0 12px rgba(255,215,0,.8)';
+            setTimeout(() => { countEl.style.color = ''; countEl.style.textShadow = ''; }, 120);
             setTimeout(tick, 180);
           };
           setTimeout(tick, 600);
