@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — TICKETS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #00ff41;
+      --green-dim:  #00b32c;
+      --green-dark: #003b0f;
+      --yellow:     #ffd700;
+      --red:        #ff4444;
+      --bg:         #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(0,255,65,.025) 0px, rgba(0,255,65,.025) 1px, transparent 1px, transparent 2px);
+      pointer-events: none; z-index: 999;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: rgba(0,255,65,.012);
+      pointer-events: none; z-index: 998;
+      animation: flicker 9s infinite;
+    }
+
+    @keyframes flicker {
+      0%,94%,100% { opacity: 1; }
+      95%  { opacity: .82; }
+      96%  { opacity: 1; }
+      97.5%{ opacity: .88; }
+      99%  { opacity: 1; }
+    }
+
+    .terminal {
+      width: 100%; max-width: 600px;
+      border: 1px solid var(--green-dim);
+      border-radius: 4px;
+      box-shadow: 0 0 24px rgba(0,255,65,.18), 0 0 80px rgba(0,255,65,.06);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--green-dark);
+      border-bottom: 1px solid var(--green-dim);
+      padding: 8px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: .45; }
+    .terminal-title { flex: 1; text-align: center; font-size: .68rem; color: var(--green-dim); letter-spacing: .18em; }
+
+    .terminal-body { padding: 1.4rem 1.6rem 2rem; background: var(--bg); }
+
+    .ln { font-size: .82rem; line-height: 1.65; }
+    .dim    { color: var(--green-dim); }
+    .bright { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,.55); }
+    .yellow { color: var(--yellow); }
+
+    .sep { border: none; border-top: 1px solid var(--green-dark); margin: 1.1rem 0; }
+
+    /* Show summary card */
+    .show-card {
+      border: 1px solid var(--green-dark);
+      padding: .8rem 1rem;
+      margin-bottom: 1.2rem;
+      background: rgba(0,255,65,.02);
+    }
+    .show-card .row {
+      font-size: .78rem;
+      line-height: 1.9;
+      color: var(--green-dim);
+      white-space: pre;
+    }
+    .show-card .row em { color: var(--green); font-style: normal; }
+    .show-card .row.sold-out em { color: var(--red); }
+
+    /* Form */
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block; font-size: .74rem; color: var(--green-dim);
+      margin-bottom: .3rem; letter-spacing: .07em;
+    }
+    .form-label em { color: var(--green); font-style: normal; }
+
+    .input-row {
+      display: flex; align-items: center;
+      border: 1px solid var(--green-dark); background: #0a0a0a;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-row:focus-within { border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,65,.2); }
+    .input-pfx { padding: .5rem .65rem; color: var(--green-dim); font-size: .85rem; user-select: none; }
+
+    input[type="tel"],
+    input[type="number"] {
+      background: transparent; border: none; outline: none;
+      color: var(--green); font-family: inherit; font-size: .88rem;
+      width: 100%; padding: .5rem .5rem .5rem 0; caret-color: var(--green);
+    }
+    input::placeholder { color: #1c4827; }
+
+    /* Quantity selector */
+    .qty-row {
+      display: flex; align-items: center; gap: .6rem;
+    }
+    .qty-btn {
+      background: transparent; border: 1px solid var(--green-dark);
+      color: var(--green-dim); font-family: inherit; font-size: 1rem;
+      width: 36px; height: 36px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      transition: border-color .15s, color .15s;
+    }
+    .qty-btn:hover { border-color: var(--green); color: var(--green); }
+    .qty-display {
+      font-size: 1.1rem; color: var(--green); min-width: 2rem; text-align: center;
+      text-shadow: 0 0 8px rgba(0,255,65,.5);
+    }
+    .qty-total {
+      margin-left: auto; font-size: .82rem; color: var(--green-dim);
+    }
+    .qty-total em { color: var(--yellow); font-style: normal; }
+
+    .btn {
+      width: 100%; background: transparent; border: 1px solid var(--green);
+      color: var(--green); font-family: inherit; font-size: .84rem;
+      padding: .78rem; cursor: pointer; letter-spacing: .22em;
+      text-transform: uppercase; transition: background .18s, box-shadow .18s, color .18s;
+      margin-top: .4rem;
+    }
+    .btn:hover  { background: var(--green); color: #000; box-shadow: 0 0 22px rgba(0,255,65,.45); }
+    .btn:active { transform: scale(.99); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn::before { content: '> '; }
+
+    .flash {
+      font-size: .78rem; padding: .5rem .8rem;
+      border: 1px solid; margin-bottom: 1rem; display: none;
+    }
+    .flash.err  { border-color: var(--red); color: var(--red); }
+    .flash.show { display: block; }
+
+    .back-link {
+      display: inline-block; margin-top: 1.2rem;
+      font-size: .75rem; color: var(--green-dim); text-decoration: none;
+      letter-spacing: .1em;
+    }
+    .back-link:hover { color: var(--green); }
+
+    .cur {
+      display: inline-block; width: 8px; height: .9em;
+      background: var(--green); vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    #loading { text-align: center; padding: 2rem 0; }
+    #content { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — ticket_checkout.enc</div>
+  </div>
+
+  <div class="terminal-body">
+
+    <div id="loading">
+      <div class="ln dim">$ loading show data<span class="cur"></span></div>
+    </div>
+
+    <div id="content">
+      <div class="ln bright" style="margin-bottom:1rem">[ SECURE YOUR SPOT ]</div>
+
+      <!-- Show summary -->
+      <div class="show-card" id="show-card"></div>
+
+      <div id="flash" class="flash err"></div>
+
+      <!-- Form -->
+      <div id="order-form">
+        <div class="form-group">
+          <label class="form-label"><em>TICKETS</em></label>
+          <div style="margin-top:.4rem">
+            <div class="qty-row">
+              <button class="qty-btn" id="qty-down">−</button>
+              <span class="qty-display" id="qty-display">1</span>
+              <button class="qty-btn" id="qty-up">+</button>
+              <span class="qty-total">= <em id="qty-total-price">$20</em></span>
+            </div>
+            <div id="remaining-note" style="font-size:.7rem;color:var(--green-dim);margin-top:.4rem"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="phone-input"><em>PHONE_NUMBER</em>  // for order confirmation</label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="tel" id="phone-input" placeholder="(555) 000-0000" autocomplete="tel" />
+          </div>
+        </div>
+
+        <button class="btn" id="checkout-btn">Proceed to payment</button>
+      </div>
+
+      <a href="javascript:history.back()" class="back-link">&lt; back</a>
+
+      <div style="margin-top:1.4rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API     = 'https://offlinecomedy-backend.vercel.app/api';
+  const params  = new URLSearchParams(window.location.search);
+  const showId  = params.get('show_id');
+
+  let show      = null;
+  let quantity  = 1;
+  let remaining = null;
+
+  function flash(msg) {
+    const el = document.getElementById('flash');
+    el.textContent = '$ ' + msg;
+    el.classList.add('show');
+  }
+
+  function updateQtyUI() {
+    const priceEach = show ? show.ticket_price_cents / 100 : 0;
+    document.getElementById('qty-display').textContent  = quantity;
+    document.getElementById('qty-total-price').textContent = '$' + (priceEach * quantity).toFixed(0);
+    document.getElementById('qty-down').disabled = quantity <= 1;
+    document.getElementById('qty-up').disabled   = remaining !== null && quantity >= remaining;
+  }
+
+  async function loadShow() {
+    if (!showId) {
+      document.getElementById('loading').innerHTML = '<div class="ln yellow">$ no show specified.</div>';
+      return;
+    }
+
+    // Fetch show data from the shows endpoint using a placeholder zip
+    // We pass the show_id directly to admin-shows (public version)
+    try {
+      const res  = await fetch(`${API}/show?id=${encodeURIComponent(showId)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      show      = data;
+      remaining = show.tickets_remaining;
+
+      // Render show card
+      const soldOut = remaining !== null && remaining <= 0;
+      document.getElementById('show-card').innerHTML = `
+        <div class="row">DATE ......... <em>${show.date}</em></div>
+        <div class="row">CITY ......... <em>${show.city.toUpperCase()}</em></div>
+        ${show.show_time ? `<div class="row">TIME ......... <em>${show.show_time}</em></div>` : ''}
+        <div class="row">PRICE ........ <em>$${(show.ticket_price_cents / 100).toFixed(0)} / person</em></div>
+        ${show.age_requirement ? `<div class="row">AGE .......... <em>${show.age_requirement}</em></div>` : ''}
+        ${show.drinks ? `<div class="row">DRINKS ....... <em>${show.drinks.replace('_', ' ')}</em></div>` : ''}
+        <div class="row">LOCATION ..... <em>CLASSIFIED</em> <span style="font-size:.68rem;color:var(--green-dim)">// revealed 24hrs prior</span></div>
+        ${remaining !== null ? `<div class="row${soldOut ? ' sold-out' : ''}">REMAINING .... <em>${soldOut ? 'SOLD OUT' : remaining + ' tickets'}</em></div>` : ''}
+      `;
+
+      if (soldOut) {
+        document.getElementById('order-form').innerHTML = '<div class="ln yellow" style="margin-top:.5rem">$ this show is sold out.</div>';
+      } else {
+        if (remaining !== null) {
+          document.getElementById('remaining-note').textContent = `max ${remaining} per order`;
+        }
+        updateQtyUI();
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+
+    } catch (err) {
+      document.getElementById('loading').innerHTML = `<div class="ln yellow">$ error: ${err.message}</div>`;
+    }
+  }
+
+  document.getElementById('qty-down').addEventListener('click', () => {
+    if (quantity > 1) { quantity--; updateQtyUI(); }
+  });
+  document.getElementById('qty-up').addEventListener('click', () => {
+    if (remaining === null || quantity < remaining) { quantity++; updateQtyUI(); }
+  });
+
+  document.getElementById('checkout-btn').addEventListener('click', async () => {
+    const phone = document.getElementById('phone-input').value.trim();
+    if (!phone) { flash('Phone number is required.'); return; }
+
+    const btn = document.getElementById('checkout-btn');
+    btn.textContent = 'Connecting to Stripe...';
+    btn.disabled = true;
+
+    try {
+      const res  = await fetch(`${API}/checkout`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ show_id: showId, quantity, phone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      window.location.href = data.url;
+    } catch (err) {
+      flash(err.message);
+      btn.textContent = '> Proceed to payment';
+      btn.disabled = false;
+    }
+  });
+
+  loadShow();
+</script>
+</body>
+</html>
