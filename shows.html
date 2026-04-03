@@ -557,7 +557,7 @@
     });
 
     // Wire up share toggles
-    tickets.filter(t => !t.show.is_past && t.quantity > 1).forEach(t => {
+    tickets.filter(t => !t.show.is_past && t.quantity >= 1).forEach(t => {
       wireUpShare(t.order_id, t.quantity);
     });
   }
@@ -603,7 +603,7 @@
     }
 
     let shareHTML = '';
-    if (!t.show.is_past && t.quantity > 1) {
+    if (!t.show.is_past && t.quantity >= 1) {
       shareHTML = `
         <div style="margin-top:.5rem">
           <span class="share-toggle" data-order="${t.order_id}" style="font-size:.72rem; color:var(--green-dim); cursor:pointer; text-decoration:underline;">Share a ticket</span>
@@ -620,11 +620,11 @@
                 <span class="input-pfx">$&gt;</span>
                 <input type="tel" id="share-phone-${t.order_id}" placeholder="(555) 000-0000" />
               </div>
-              ${t.quantity > 2 ? `
-                <div style="font-size:.72rem; color:var(--green-dim); margin:.4rem 0 .3rem;">HOW MANY (max ${t.quantity - 1})</div>
+              ${t.quantity > 1 ? `
+                <div style="font-size:.72rem; color:var(--green-dim); margin:.4rem 0 .3rem;">HOW MANY (max ${t.quantity})</div>
                 <div class="input-row">
                   <span class="input-pfx">$&gt;</span>
-                  <input type="number" id="share-qty-${t.order_id}" value="1" min="1" max="${t.quantity - 1}" style="background:transparent; border:none; outline:none; color:var(--green); font-family:inherit; font-size:.85rem; width:100%; padding:.4rem .4rem .4rem 0;" />
+                  <input type="number" id="share-qty-${t.order_id}" value="1" min="1" max="${t.quantity}" style="background:transparent; border:none; outline:none; color:var(--green); font-family:inherit; font-size:.85rem; width:100%; padding:.4rem .4rem .4rem 0;" />
                 </div>
               ` : ''}
               <button class="btn" id="share-btn-${t.order_id}" style="margin-top:.5rem;">Share</button>
