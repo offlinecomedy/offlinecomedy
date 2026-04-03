@@ -78,12 +78,20 @@
     <div id="email-setup-section" style="display:none">
       <div class="ln bright" style="margin-bottom:.5rem">[ WELCOME TO OFFLINE COMEDY ]</div>
       <div class="ln dim" id="email-setup-greeting" style="margin-bottom:1rem"></div>
-      <div class="ln dim" style="margin-bottom:1rem">Enter the email you'd like to use for your Offline Comedy account.</div>
+      <div class="ln dim" style="margin-bottom:1rem">Enter your email or phone number to set up your Offline Comedy account.</div>
       <div id="email-setup-flash" class="flash err"></div>
-      <div class="form-group" style="margin-bottom:1rem;">
+      <div class="form-group" style="margin-bottom:.6rem;">
+        <div style="font-size:.7rem; color:var(--green-dim); margin-bottom:.3rem;">EMAIL</div>
         <div class="input-row">
           <span class="input-pfx">$&gt;</span>
           <input type="email" id="setup-email" placeholder="your@email.com" />
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <div style="font-size:.7rem; color:var(--green-dim); margin-bottom:.3rem;">PHONE</div>
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="tel" id="setup-phone" placeholder="(555) 000-0000" />
         </div>
       </div>
       <button class="btn" id="setup-email-btn">Continue</button>
@@ -440,15 +448,18 @@
         // Wire up email submit
         document.getElementById('setup-email-btn').addEventListener('click', async () => {
           const email = document.getElementById('setup-email').value.trim();
-          if (!email) { flashEl('email-setup-flash', 'Email is required'); return; }
+          const phone = document.getElementById('setup-phone').value.trim();
+          if (!email && !phone) { flashEl('email-setup-flash', 'Enter at least an email or phone number'); return; }
 
           const btn = document.getElementById('setup-email-btn');
           btn.disabled = true; btn.textContent = 'Saving...';
 
           try {
-            // Re-call invite endpoint with email to save it
             const savedInvite = localStorage.getItem('comedian_invite');
-            const res2 = await fetch(`${API}/comedian-invite?token=${encodeURIComponent(savedInvite)}&email=${encodeURIComponent(email)}`);
+            const params = new URLSearchParams({ token: savedInvite });
+            if (email) params.set('email', email);
+            if (phone) params.set('phone', phone);
+            const res2 = await fetch(`${API}/comedian-invite?${params.toString()}`);
             const data2 = await res2.json();
             if (!res2.ok) throw new Error(data2.error);
 
