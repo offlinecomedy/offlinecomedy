@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OFFLINE COMEDY — COMEDIAN PORTAL</title>
   <script src="https://js.stripe.com/v3/"></script>
-  <script src="https://js.stripe.com/v3/connect.js"></script>
+  <script src="https://connect-js.stripe.com/connect-js/v1.0/connect.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -245,8 +245,10 @@
       if (!res.ok) {
         if (res.status === 401) {
           localStorage.removeItem('comedian_token');
+          localStorage.removeItem('comedian_invite');
           comedianToken = null;
           document.getElementById('portal-section').style.display = 'none';
+          document.getElementById('email-setup-section').style.display = 'none';
           document.getElementById('login-section').style.display = 'block';
           return;
         }
@@ -324,14 +326,13 @@
       if (!res.ok) throw new Error(data.error);
 
       // Initialize Stripe Connect embedded onboarding
-      const stripeConnectInstance = loadConnectAndInitialize({
-        publishableKey: STRIPE_PK,
-        fetchClientSecret: async () => data.client_secret,
+      const stripeConnectInstance = StripeConnect(STRIPE_PK);
+
+      const onboardingComponent = stripeConnectInstance.create('account-onboarding', {
+        clientSecret: data.client_secret,
       });
 
-      const onboardingComponent = stripeConnectInstance.create('account-onboarding');
-      onboardingComponent.setOnExit(() => {
-        // Check status after they finish
+      onboardingComponent.addEventListener('exit', () => {
         checkOnboardingStatus();
       });
 
