@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — MY TICKETS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #00ff41;
+      --green-dim:  #00b32c;
+      --green-dark: #003b0f;
+      --yellow:     #ffd700;
+      --red:        #ff4444;
+      --bg:         #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(0,255,65,.025) 0px, rgba(0,255,65,.025) 1px, transparent 1px, transparent 2px);
+      pointer-events: none; z-index: 999;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: rgba(0,255,65,.012);
+      pointer-events: none; z-index: 998;
+      animation: flicker 9s infinite;
+    }
+    @keyframes flicker {
+      0%,94%,100%{opacity:1} 95%{opacity:.82} 96%{opacity:1} 97.5%{opacity:.88} 99%{opacity:1}
+    }
+
+    .terminal {
+      width: 100%; max-width: 640px;
+      border: 1px solid var(--green-dim); border-radius: 4px;
+      box-shadow: 0 0 24px rgba(0,255,65,.18), 0 0 80px rgba(0,255,65,.06);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--green-dark);
+      border-bottom: 1px solid var(--green-dim);
+      padding: 8px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: .45; }
+    .terminal-title { flex: 1; text-align: center; font-size: .68rem; color: var(--green-dim); letter-spacing: .18em; }
+
+    .terminal-body { padding: 1.4rem 1.6rem 2rem; background: var(--bg); }
+
+    .ln { font-size: .82rem; line-height: 1.65; }
+    .dim    { color: var(--green-dim); }
+    .bright { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,.55); }
+    .yellow { color: var(--yellow); }
+
+    .sep { border: none; border-top: 1px solid var(--green-dark); margin: 1rem 0; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: .74rem; color: var(--green-dim); margin-bottom: .3rem; letter-spacing: .07em; }
+    .form-label em { color: var(--green); font-style: normal; }
+
+    .input-row {
+      display: flex; align-items: center;
+      border: 1px solid var(--green-dark); background: #0a0a0a;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-row:focus-within { border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,65,.2); }
+    .input-pfx { padding: .5rem .65rem; color: var(--green-dim); font-size: .85rem; user-select: none; }
+
+    input[type="tel"], input[type="text"] {
+      background: transparent; border: none; outline: none;
+      color: var(--green); font-family: inherit; font-size: .88rem;
+      width: 100%; padding: .5rem .5rem .5rem 0; caret-color: var(--green);
+    }
+    input::placeholder { color: #1c4827; }
+
+    textarea {
+      background: #0a0a0a; border: 1px solid var(--green-dark);
+      color: var(--green); font-family: inherit; font-size: .82rem;
+      width: 100%; padding: .5rem; min-height: 60px; resize: vertical;
+      outline: none; caret-color: var(--green);
+    }
+    textarea:focus { border-color: var(--green); }
+    textarea::placeholder { color: #1c4827; }
+
+    .btn {
+      background: transparent; border: 1px solid var(--green);
+      color: var(--green); font-family: inherit; font-size: .8rem;
+      padding: .55rem 1rem; cursor: pointer; letter-spacing: .15em;
+      text-transform: uppercase; transition: background .18s, box-shadow .18s, color .18s;
+      width: 100%;
+    }
+    .btn:hover  { background: var(--green); color: #000; box-shadow: 0 0 18px rgba(0,255,65,.4); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn::before { content: '> '; }
+    .btn-sm { padding: .35rem .7rem; font-size: .72rem; width: auto; }
+
+    .flash { font-size: .78rem; padding: .5rem .8rem; border: 1px solid; margin-bottom: 1rem; display: none; }
+    .flash.err  { border-color: var(--red); color: var(--red); }
+    .flash.ok   { border-color: var(--green); color: var(--green); }
+    .flash.show { display: block; }
+
+    .cur {
+      display: inline-block; width: 8px; height: .9em;
+      background: var(--green); vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Ticket card */
+    .ticket-card {
+      border: 1px solid var(--green-dark);
+      padding: .8rem 1rem;
+      margin-bottom: .8rem;
+      background: rgba(0,255,65,.02);
+    }
+    .ticket-card.past {
+      opacity: .65;
+    }
+    .ticket-card .row {
+      font-size: .76rem; line-height: 1.85;
+      color: var(--green-dim);
+    }
+    .ticket-card .row em { color: var(--green); font-style: normal; }
+    .ticket-card .row.loc { color: var(--yellow); }
+    .ticket-card .row.loc em { color: var(--yellow); }
+
+    .venue-reveal {
+      border: 1px solid var(--yellow);
+      background: rgba(255,215,0,.04);
+      padding: .6rem .8rem;
+      margin-top: .5rem;
+    }
+    .venue-reveal .row { color: var(--yellow); }
+    .venue-reveal .row em { color: var(--yellow); }
+
+    .section-label {
+      font-size: .7rem; color: var(--green-dim); letter-spacing: .15em;
+      margin: 1rem 0 .5rem; text-transform: uppercase;
+    }
+
+    /* Stats */
+    .stats-box {
+      border: 1px solid var(--green-dark);
+      padding: .7rem 1rem;
+      margin-bottom: 1rem;
+      background: rgba(0,255,65,.02);
+      display: flex; gap: 1.5rem; flex-wrap: wrap;
+    }
+    .stat { font-size: .74rem; color: var(--green-dim); }
+    .stat em { color: var(--green); font-style: normal; font-size: .88rem; }
+
+    /* Star rating */
+    .stars { display: flex; gap: .3rem; margin-top: .3rem; }
+    .star {
+      font-size: 1.3rem; cursor: pointer; color: var(--green-dark);
+      transition: color .15s;
+    }
+    .star.active { color: var(--yellow); text-shadow: 0 0 8px rgba(255,215,0,.5); }
+    .star:hover { color: var(--yellow); }
+
+    .feedback-form { margin-top: .6rem; }
+    .feedback-done { font-size: .74rem; color: var(--green-dim); margin-top: .5rem; }
+
+    /* Comedians list */
+    .comedian-tags {
+      display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .3rem;
+    }
+    .comedian-tag {
+      font-size: .68rem; padding: .2rem .5rem;
+      border: 1px solid var(--green-dark); color: var(--green-dim);
+    }
+
+    .back-link {
+      display: inline-block; margin-top: 1.2rem;
+      font-size: .75rem; color: var(--green-dim); text-decoration: none;
+      letter-spacing: .1em;
+    }
+    .back-link:hover { color: var(--green); }
+
+    .logout-link {
+      font-size: .7rem; color: var(--green-dim); cursor: pointer;
+      text-decoration: underline; margin-left: 1rem;
+    }
+    .logout-link:hover { color: var(--red); }
+
+    #login-section, #code-section, #tickets-section { display: none; }
+  </style>
+</head>
+<body>
+
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — my_tickets.enc</div>
+  </div>
+
+  <div class="terminal-body">
+
+    <!-- Phone input -->
+    <div id="login-section">
+      <div class="ln bright" style="margin-bottom:1rem">[ MY TICKETS ]</div>
+      <div class="ln dim" style="margin-bottom:1rem">Enter the phone number you used to purchase tickets.</div>
+
+      <div id="login-flash" class="flash err"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="phone-input"><em>PHONE</em></label>
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="tel" id="phone-input" placeholder="(555) 000-0000" autocomplete="tel" />
+        </div>
+      </div>
+
+      <button class="btn" id="send-code-btn">Send verification code</button>
+    </div>
+
+    <!-- Code verification -->
+    <div id="code-section">
+      <div class="ln bright" style="margin-bottom:1rem">[ ENTER CODE ]</div>
+      <div class="ln dim" style="margin-bottom:1rem">We texted a 6-digit code to your phone.</div>
+
+      <div id="code-flash" class="flash err"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="code-input"><em>CODE</em></label>
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="text" id="code-input" placeholder="000000" maxlength="6" autocomplete="one-time-code" inputmode="numeric" />
+        </div>
+      </div>
+
+      <button class="btn" id="verify-btn">Verify</button>
+      <div style="margin-top:.6rem; font-size:.72rem; color:var(--green-dim)">
+        <span id="resend-link" style="cursor:pointer; text-decoration:underline">Resend code</span>
+        &nbsp;&middot;&nbsp;
+        <span id="back-to-phone" style="cursor:pointer; text-decoration:underline">Change number</span>
+      </div>
+    </div>
+
+    <!-- Tickets view -->
+    <div id="tickets-section">
+      <div style="display:flex; align-items:center; margin-bottom:.3rem">
+        <div class="ln bright">[ MY TICKETS ]</div>
+        <span class="logout-link" id="logout-link">logout</span>
+      </div>
+      <div class="ln dim" id="welcome-msg" style="margin-bottom:1rem"></div>
+
+      <div class="stats-box" id="stats-box"></div>
+
+      <div id="tickets-list"></div>
+    </div>
+
+    <a href="index.html" class="back-link">&lt; back to offlinecomedy.com</a>
+    <div style="margin-top:1rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api';
+
+  let guestToken = localStorage.getItem('guest_token');
+  let guestPhone = '';
+
+  function flashEl(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = '$ ' + msg;
+    el.className = `flash ${type || 'err'} show`;
+  }
+
+  // ── LOGIN ──
+  document.getElementById('send-code-btn').addEventListener('click', sendCode);
+  document.getElementById('phone-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendCode(); });
+
+  async function sendCode() {
+    const phone = document.getElementById('phone-input').value.trim();
+    if (!phone) { flashEl('login-flash', 'Enter your phone number.'); return; }
+
+    const btn = document.getElementById('send-code-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch(`${API}/guest-send-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      guestPhone = phone;
+      document.getElementById('login-section').style.display = 'none';
+      document.getElementById('code-section').style.display = 'block';
+      document.getElementById('code-input').focus();
+    } catch (err) {
+      flashEl('login-flash', err.message);
+      btn.disabled = false;
+      btn.textContent = '> Send verification code';
+    }
+  }
+
+  // ── VERIFY ──
+  document.getElementById('verify-btn').addEventListener('click', verifyCode);
+  document.getElementById('code-input').addEventListener('keydown', e => { if (e.key === 'Enter') verifyCode(); });
+
+  async function verifyCode() {
+    const code = document.getElementById('code-input').value.trim();
+    if (!code || code.length !== 6) { flashEl('code-flash', 'Enter the 6-digit code.'); return; }
+
+    const btn = document.getElementById('verify-btn');
+    btn.disabled = true;
+    btn.textContent = 'Verifying...';
+
+    try {
+      const res = await fetch(`${API}/guest-verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: guestPhone, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      guestToken = data.token;
+      localStorage.setItem('guest_token', guestToken);
+      showTickets();
+    } catch (err) {
+      flashEl('code-flash', err.message);
+      btn.disabled = false;
+      btn.textContent = '> Verify';
+    }
+  }
+
+  document.getElementById('resend-link').addEventListener('click', () => {
+    document.getElementById('code-input').value = '';
+    document.getElementById('code-flash').className = 'flash err';
+    sendCodeForPhone(guestPhone);
+  });
+
+  async function sendCodeForPhone(phone) {
+    try {
+      await fetch(`${API}/guest-send-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      flashEl('code-flash', 'New code sent!', 'ok');
+    } catch {}
+  }
+
+  document.getElementById('back-to-phone').addEventListener('click', () => {
+    document.getElementById('code-section').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+    const btn = document.getElementById('send-code-btn');
+    btn.disabled = false;
+    btn.textContent = '> Send verification code';
+  });
+
+  // ── TICKETS ──
+  async function showTickets() {
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('code-section').style.display = 'none';
+    document.getElementById('tickets-section').style.display = 'block';
+
+    try {
+      const res = await fetch(`${API}/guest-tickets`, {
+        headers: { 'x-guest-token': guestToken },
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          // Token expired
+          localStorage.removeItem('guest_token');
+          guestToken = null;
+          document.getElementById('tickets-section').style.display = 'none';
+          document.getElementById('login-section').style.display = 'block';
+          return;
+        }
+        throw new Error(data.error);
+      }
+
+      const { tickets, stats } = data;
+
+      // Welcome
+      const name = tickets.length > 0 ? tickets[0].buyer_name : '';
+      document.getElementById('welcome-msg').textContent =
+        `$ welcome${name ? ', ' + name : ''}`;
+
+      // Stats
+      document.getElementById('stats-box').innerHTML = `
+        <div class="stat">SHOWS<br><em>${stats.shows_attended}</em></div>
+        <div class="stat">TICKETS<br><em>${stats.total_tickets}</em></div>
+        <div class="stat">COMEDIANS SEEN<br><em>${stats.comedians_seen.length}</em></div>
+      `;
+
+      renderTickets(tickets);
+    } catch (err) {
+      document.getElementById('tickets-list').innerHTML =
+        `<div class="ln yellow">$ ${err.message}</div>`;
+    }
+  }
+
+  function renderTickets(tickets) {
+    const listEl = document.getElementById('tickets-list');
+    listEl.innerHTML = '';
+
+    const upcoming = tickets.filter(t => !t.show.is_past);
+    const past = tickets.filter(t => t.show.is_past);
+
+    if (upcoming.length > 0) {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = 'upcoming';
+      listEl.appendChild(label);
+      upcoming.forEach(t => listEl.appendChild(buildTicketCard(t)));
+    }
+
+    if (past.length > 0) {
+      const label = document.createElement('div');
+      label.className = 'section-label';
+      label.textContent = 'past shows';
+      listEl.appendChild(label);
+      past.forEach(t => listEl.appendChild(buildTicketCard(t)));
+    }
+
+    if (tickets.length === 0) {
+      listEl.innerHTML = '<div class="ln dim">$ no tickets found</div>';
+    }
+  }
+
+  function buildTicketCard(t) {
+    const card = document.createElement('div');
+    card.className = 'ticket-card' + (t.show.is_past ? ' past' : '');
+
+    let venueHTML = '';
+    if (t.show.venue) {
+      venueHTML = `
+        <div class="venue-reveal">
+          <div class="row loc">VENUE ........ <em>${t.show.venue.name}</em></div>
+          <div class="row loc">ADDRESS ...... <em>${t.show.venue.address}</em></div>
+          <div class="row loc">             <em>${t.show.venue.city}, ${t.show.venue.state} ${t.show.venue.zip_code}</em></div>
+        </div>
+      `;
+    } else if (!t.show.is_past && !t.show.location_revealed) {
+      venueHTML = `<div class="row">LOCATION ..... <em>CLASSIFIED</em> <span style="font-size:.66rem;color:var(--green-dim)">// revealed 24hrs before show</span></div>`;
+    }
+
+    let comediansHTML = '';
+    if (t.show.comedians.length > 0) {
+      comediansHTML = `
+        <div style="margin-top:.4rem">
+          <div class="row">COMEDIANS</div>
+          <div class="comedian-tags">
+            ${t.show.comedians.map(c =>
+              `<span class="comedian-tag">${c.name}${c.instagram ? ' @' + c.instagram : ''}</span>`
+            ).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    let feedbackHTML = '';
+    if (t.show.is_past && !t.has_feedback) {
+      feedbackHTML = `
+        <hr class="sep" />
+        <div class="feedback-form" id="feedback-${t.order_id}">
+          <div class="row" style="margin-bottom:.3rem">HOW WAS THE SHOW?</div>
+          <div class="stars" id="stars-${t.order_id}">
+            ${[1,2,3,4,5].map(n => `<span class="star" data-val="${n}">&#9733;</span>`).join('')}
+          </div>
+          <textarea id="comment-${t.order_id}" placeholder="Any thoughts? (optional)" style="margin-top:.5rem"></textarea>
+          <button class="btn btn-sm" style="margin-top:.4rem" id="fb-btn-${t.order_id}">Submit feedback</button>
+        </div>
+      `;
+    } else if (t.show.is_past && t.has_feedback) {
+      feedbackHTML = `<div class="feedback-done">&#10003; Feedback submitted — thanks!</div>`;
+    }
+
+    card.innerHTML = `
+      <div class="row">DATE ......... <em>${t.show.date}</em></div>
+      <div class="row">CITY ......... <em>${t.show.city.toUpperCase()}</em></div>
+      ${t.show.show_time ? `<div class="row">TIME ......... <em>${t.show.show_time}</em></div>` : ''}
+      <div class="row">TICKETS ...... <em>${t.quantity}</em></div>
+      ${t.show.age_requirement ? `<div class="row">AGE .......... <em>${t.show.age_requirement}</em></div>` : ''}
+      ${t.show.drinks ? `<div class="row">DRINKS ....... <em>${t.show.drinks.replace('_', ' ')}</em></div>` : ''}
+      ${t.show.venue_type ? `<div class="row">VENUE TYPE ... <em>${t.show.venue_type}</em></div>` : ''}
+      ${venueHTML}
+      ${comediansHTML}
+      ${feedbackHTML}
+    `;
+
+    // Wire up star rating + submit
+    if (t.show.is_past && !t.has_feedback) {
+      setTimeout(() => {
+        let selectedRating = 0;
+        const starsEl = document.getElementById(`stars-${t.order_id}`);
+        if (!starsEl) return;
+
+        starsEl.querySelectorAll('.star').forEach(star => {
+          star.addEventListener('click', () => {
+            selectedRating = parseInt(star.dataset.val);
+            starsEl.querySelectorAll('.star').forEach((s, i) => {
+              s.classList.toggle('active', i < selectedRating);
+            });
+          });
+        });
+
+        const fbBtn = document.getElementById(`fb-btn-${t.order_id}`);
+        if (fbBtn) {
+          fbBtn.addEventListener('click', async () => {
+            if (selectedRating === 0) return;
+            fbBtn.disabled = true;
+            fbBtn.textContent = 'Sending...';
+
+            try {
+              const comment = document.getElementById(`comment-${t.order_id}`).value.trim();
+              const res = await fetch(`${API}/guest-feedback`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-guest-token': guestToken },
+                body: JSON.stringify({ order_id: t.order_id, rating: selectedRating, comment }),
+              });
+              const data = await res.json();
+              if (!res.ok) throw new Error(data.error);
+
+              const formEl = document.getElementById(`feedback-${t.order_id}`);
+              formEl.innerHTML = '<div class="feedback-done">&#10003; Feedback submitted — thanks!</div>';
+            } catch (err) {
+              fbBtn.disabled = false;
+              fbBtn.textContent = '> Submit feedback';
+              alert(err.message);
+            }
+          });
+        }
+      }, 0);
+    }
+
+    return card;
+  }
+
+  // Logout
+  document.getElementById('logout-link').addEventListener('click', () => {
+    localStorage.removeItem('guest_token');
+    guestToken = null;
+    document.getElementById('tickets-section').style.display = 'none';
+    document.getElementById('login-section').style.display = 'block';
+    const btn = document.getElementById('send-code-btn');
+    btn.disabled = false;
+    btn.textContent = '> Send verification code';
+  });
+
+  // Pre-fill phone from localStorage
+  const savedPhone = localStorage.getItem('oc_phone');
+  if (savedPhone) document.getElementById('phone-input').value = savedPhone;
+
+  // Init — check for existing session
+  if (guestToken) {
+    showTickets();
+  } else {
+    document.getElementById('login-section').style.display = 'block';
+  }
+</script>
+</body>
+</html>
