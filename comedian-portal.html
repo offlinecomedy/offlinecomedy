@@ -87,12 +87,12 @@
     <!-- Login -->
     <div id="login-section">
       <div class="ln bright" style="margin-bottom:1rem">[ COMEDIAN PORTAL ]</div>
-      <div class="ln dim" style="margin-bottom:1rem">Log in with the email on file with Offline Comedy.</div>
+      <div class="ln dim" style="margin-bottom:1rem">Log in with your email or phone number.</div>
       <div id="login-flash" class="flash err"></div>
       <div class="form-group" style="margin-bottom:1rem;">
         <div class="input-row">
           <span class="input-pfx">$&gt;</span>
-          <input type="email" id="login-email" placeholder="your@email.com" />
+          <input type="text" id="login-input" placeholder="email or phone number" />
         </div>
       </div>
       <button class="btn" id="send-code-btn">Send verification code</button>
@@ -151,25 +151,38 @@
 
   // ── LOGIN ──
   document.getElementById('send-code-btn').addEventListener('click', sendCode);
-  document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') sendCode(); });
+  document.getElementById('login-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendCode(); });
+
+  let loginMethod = 'email'; // 'email' or 'phone'
 
   async function sendCode() {
-    const email = document.getElementById('login-email').value.trim();
-    if (!email) return;
+    const input = document.getElementById('login-input').value.trim();
+    if (!input) return;
+
+    // Detect email vs phone
+    const isPhone = /^\+?\d[\d\s\-().]{6,}$/.test(input) || input.replace(/\D/g, '').length >= 10;
+    loginMethod = isPhone ? 'phone' : 'email';
 
     const btn = document.getElementById('send-code-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
 
     try {
+      const body = { action: 'send_code' };
+      if (isPhone) {
+        body.phone = input;
+      } else {
+        body.email = input;
+      }
+
       const res = await fetch(`${API}/comedian-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'send_code', email }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
 
-      comedianEmail = email;
+      comedianEmail = isPhone ? '' : input;
       document.getElementById('login-section').style.display = 'none';
       document.getElementById('code-section').style.display = 'block';
       document.getElementById('code-msg').textContent = `Code sent to phone ending in ${data.phone_last4}`;
@@ -194,7 +207,12 @@
       const res = await fetch(`${API}/comedian-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'verify', email: comedianEmail, code }),
+        body: JSON.stringify({
+          action: 'verify',
+          email: loginMethod === 'email' ? document.getElementById('login-input').value.trim() : undefined,
+          phone: loginMethod === 'phone' ? document.getElementById('login-input').value.trim() : undefined,
+          code,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
