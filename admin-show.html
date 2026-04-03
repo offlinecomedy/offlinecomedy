@@ -75,7 +75,7 @@
   const API = 'https://offlinecomedy-backend.vercel.app/api';
   const params = new URLSearchParams(window.location.search);
   const showId = params.get('id');
-  const adminKey = sessionStorage.getItem('admin_key');
+  const adminKey = sessionStorage.getItem('oc_admin_key');
 
   if (!adminKey) {
     window.location.href = 'admin.html';
