@@ -132,15 +132,25 @@
       max-width: 210px;
       margin: 0 auto 0.6rem;
       aspect-ratio: 2062 / 1713;
+      box-shadow: 0 0 20px rgba(0,255,65,0.3);
     }
 
+    #logo-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      filter: invert(1) contrast(180%) sepia(1) saturate(10) hue-rotate(88deg);
+      z-index: 1;
+    }
 
     #logo-canvas {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
-      filter: drop-shadow(0 0 10px rgba(0,255,65,0.6));
+      z-index: 2;
     }
 
     @keyframes textReveal {
@@ -293,7 +303,8 @@
     <!-- Logo (hidden until boot completes) -->
     <div id="logo">
       <div class="logo-scan-wrap">
-        <canvas id="logo-canvas" width="210" height="174" aria-label="Offline Comedy"></canvas>
+        <img id="logo-img" src="logo.png" alt="Offline Comedy">
+        <canvas id="logo-canvas" width="210" height="174"></canvas>
       </div>
 
       <div class="brand-text">OFFLINE COMEDY</div>
@@ -422,59 +433,57 @@
     const W = canvas.width, H = canvas.height;
     const BG = getComputedStyle(document.querySelector('.terminal-body')).backgroundColor;
 
-    // Fill canvas with background color (hides everything initially)
+    // 1. Fill canvas with BG — makes it fully opaque BEFORE the logo div is shown
     ctx.fillStyle = BG;
     ctx.fillRect(0, 0, W, H);
 
-    // Load logo and prepare a pre-colored version on an offscreen canvas
-    const img = new Image();
-    img.src = 'logo.png';
-    img.onload = () => {
-      const offscreen = document.createElement('canvas');
-      offscreen.width = W; offscreen.height = H;
-      const octx = offscreen.getContext('2d');
-      octx.filter = 'invert(1) contrast(180%) sepia(1) saturate(10) hue-rotate(88deg)';
-      octx.drawImage(img, 0, 0, W, H);
+    // 2. Now it's safe to reveal the img (it's behind the opaque canvas, invisible)
+    document.getElementById('logo-img').style.opacity = '1';
 
-      // Build dot grid and shuffle
-      const step = 3;
-      const dots = [];
-      for (let y = 0; y < H; y += step) {
-        for (let x = 0; x < W; x += step) {
-          dots.push({ x, y });
+    // 3. Build dot grid and shuffle
+    const step = 3;
+    const dots = [];
+    for (let y = 0; y < H; y += step) {
+      for (let x = 0; x < W; x += step) {
+        dots.push({ x, y });
+      }
+    }
+    for (let i = dots.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = dots[i]; dots[i] = dots[j]; dots[j] = tmp;
+    }
+
+    // 4. Clear dots to reveal the CSS-filtered img underneath
+    const totalTime = 4200;
+
+    dots.forEach(dot => {
+      const delay = Math.random() * totalTime;
+      const willFlicker = Math.random() < 0.28;
+      const flickerCount = willFlicker ? Math.floor(Math.random() * 3) + 1 : 0;
+
+      setTimeout(() => {
+        if (flickerCount > 0) {
+          let count = 0;
+          const tick = () => {
+            if (count >= flickerCount * 2) {
+              ctx.clearRect(dot.x, dot.y, step, step);
+              return;
+            }
+            if (count % 2 === 0) {
+              ctx.clearRect(dot.x, dot.y, step, step);
+            } else {
+              ctx.fillStyle = BG;
+              ctx.fillRect(dot.x, dot.y, step, step);
+            }
+            count++;
+            setTimeout(tick, 35 + Math.random() * 90);
+          };
+          tick();
+        } else {
+          ctx.clearRect(dot.x, dot.y, step, step);
         }
-      }
-      for (let i = dots.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const tmp = dots[i]; dots[i] = dots[j]; dots[j] = tmp;
-      }
-
-      const totalTime = 4200;
-
-      dots.forEach(dot => {
-        const delay = Math.random() * totalTime;
-        const willFlicker = Math.random() < 0.28;
-        const flickerCount = willFlicker ? Math.floor(Math.random() * 3) + 1 : 0;
-
-        const reveal = () => ctx.drawImage(offscreen, dot.x, dot.y, step, step, dot.x, dot.y, step, step);
-        const hide   = () => { ctx.fillStyle = BG; ctx.fillRect(dot.x, dot.y, step, step); };
-
-        setTimeout(() => {
-          if (flickerCount > 0) {
-            let count = 0;
-            const tick = () => {
-              if (count >= flickerCount * 2) { reveal(); return; }
-              if (count % 2 === 0) reveal(); else hide();
-              count++;
-              setTimeout(tick, 35 + Math.random() * 90);
-            };
-            tick();
-          } else {
-            reveal();
-          }
-        }, delay);
-      });
-    };
+      }, delay);
+    });
   }
 
   async function runBoot() {
