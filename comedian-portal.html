@@ -69,6 +69,21 @@
   </div>
   <div class="terminal-body">
 
+    <!-- Email Setup (invite flow) -->
+    <div id="email-setup-section" style="display:none">
+      <div class="ln bright" style="margin-bottom:.5rem">[ WELCOME TO OFFLINE COMEDY ]</div>
+      <div class="ln dim" id="email-setup-greeting" style="margin-bottom:1rem"></div>
+      <div class="ln dim" style="margin-bottom:1rem">Enter the email you'd like to use for your Offline Comedy account.</div>
+      <div id="email-setup-flash" class="flash err"></div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="email" id="setup-email" placeholder="your@email.com" />
+        </div>
+      </div>
+      <button class="btn" id="setup-email-btn">Continue</button>
+    </div>
+
     <!-- Login -->
     <div id="login-section">
       <div class="ln bright" style="margin-bottom:1rem">[ COMEDIAN PORTAL ]</div>
@@ -377,22 +392,59 @@
 
   // Init — check for invite link first
   async function init() {
-    const inviteToken = new URLSearchParams(window.location.search).get('invite');
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteToken = urlParams.get('invite');
 
     if (inviteToken) {
-      // Validate invite and get session
+      // Validate invite
       try {
         const res = await fetch(`${API}/comedian-invite?token=${encodeURIComponent(inviteToken)}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
+        // Store session
         comedianToken = data.session_token;
         localStorage.setItem('comedian_token', comedianToken);
+        localStorage.setItem('comedian_invite', inviteToken);
 
         // Clean URL
         window.history.replaceState({}, '', 'comedian-portal.html');
 
-        loadPortal();
+        // Show email setup screen
+        document.getElementById('email-setup-section').style.display = 'block';
+        document.getElementById('email-setup-greeting').textContent = `$ welcome, ${data.comedian.name}`;
+
+        // Wire up email submit
+        document.getElementById('setup-email-btn').addEventListener('click', async () => {
+          const email = document.getElementById('setup-email').value.trim();
+          if (!email) { flashEl('email-setup-flash', 'Email is required'); return; }
+
+          const btn = document.getElementById('setup-email-btn');
+          btn.disabled = true; btn.textContent = 'Saving...';
+
+          try {
+            // Re-call invite endpoint with email to save it
+            const savedInvite = localStorage.getItem('comedian_invite');
+            const res2 = await fetch(`${API}/comedian-invite?token=${encodeURIComponent(savedInvite)}&email=${encodeURIComponent(email)}`);
+            const data2 = await res2.json();
+            if (!res2.ok) throw new Error(data2.error);
+
+            // Update session token (new one was created)
+            comedianToken = data2.session_token;
+            localStorage.setItem('comedian_token', comedianToken);
+
+            document.getElementById('email-setup-section').style.display = 'none';
+            loadPortal();
+          } catch (err) {
+            flashEl('email-setup-flash', err.message);
+            btn.disabled = false; btn.textContent = '> Continue';
+          }
+        });
+
+        document.getElementById('setup-email').addEventListener('keydown', e => {
+          if (e.key === 'Enter') document.getElementById('setup-email-btn').click();
+        });
+
         return;
       } catch (err) {
         document.getElementById('login-section').style.display = 'block';
