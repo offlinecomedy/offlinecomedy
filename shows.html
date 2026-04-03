@@ -636,6 +636,7 @@
 
     return `
       <div class="ticket-card${t.show.is_past ? ' past' : ''}">
+        ${t.order_number ? `<div class="row">ORDER ........ <em>${t.order_number}</em></div>` : ''}
         <div class="row">DATE ......... <em>${t.show.date}</em></div>
         <div class="row">CITY ......... <em>${t.show.city ? t.show.city.toUpperCase() : ''}</em></div>
         ${t.show.show_time ? `<div class="row">TIME ......... <em>${t.show.show_time}</em></div>` : ''}
