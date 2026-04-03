@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — SHOWS</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #00ff41;
+      --green-dim:  #00b32c;
+      --green-dark: #003b0f;
+      --yellow:     #ffd700;
+      --bg:         #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,255,65,0.025) 0px,
+        rgba(0,255,65,0.025) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0,255,65,0.012);
+      pointer-events: none;
+      z-index: 998;
+      animation: flicker 9s infinite;
+    }
+
+    @keyframes flicker {
+      0%,94%,100% { opacity: 1; }
+      95%          { opacity: 0.82; }
+      96%          { opacity: 1; }
+      97.5%        { opacity: 0.88; }
+      99%          { opacity: 1; }
+    }
+
+    .terminal {
+      width: 100%;
+      max-width: 740px;
+      border: 1px solid var(--green-dim);
+      border-radius: 4px;
+      box-shadow:
+        0 0 24px rgba(0,255,65,0.18),
+        0 0 80px rgba(0,255,65,0.06);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--green-dark);
+      border-bottom: 1px solid var(--green-dim);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: 0.45; }
+
+    .terminal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--green-dim);
+      letter-spacing: 0.18em;
+    }
+
+    .terminal-body {
+      padding: 1.4rem 1.6rem 2rem;
+      background: var(--bg);
+    }
+
+    .ln {
+      font-size: 0.82rem;
+      line-height: 1.65;
+      white-space: pre;
+    }
+    .ln.title  { color: var(--green); font-size: 0.88rem; letter-spacing: 0.06em; }
+    .ln.dim    { color: var(--green-dim); }
+    .ln.bright { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,0.55); }
+    .ln.yellow { color: var(--yellow); }
+
+    .cur {
+      display: inline-block;
+      width: 8px; height: 0.9em;
+      background: var(--green);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Shows list ── */
+    #shows-list { margin-top: 0.6rem; }
+
+    .sep {
+      border: none;
+      border-top: 1px solid var(--green-dark);
+      margin: 0.5rem 0;
+    }
+
+    .show-row {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .show-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.55rem 0;
+      font-size: 0.84rem;
+      color: var(--green);
+      transition: text-shadow 0.15s;
+    }
+    .show-header:hover {
+      text-shadow: 0 0 10px rgba(0,255,65,0.6);
+    }
+
+    .show-arrow {
+      font-size: 0.7rem;
+      color: var(--green-dim);
+      min-width: 0.9rem;
+      transition: transform 0.2s;
+    }
+    .show-row.open .show-arrow {
+      transform: rotate(90deg);
+    }
+
+    .show-date {
+      color: var(--yellow);
+      letter-spacing: 0.05em;
+    }
+
+    .show-city {
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .show-miles {
+      margin-left: auto;
+      font-size: 0.72rem;
+      color: var(--green-dim);
+    }
+
+    /* Expanded detail panel */
+    .show-detail {
+      display: none;
+      padding: 0.5rem 0 0.8rem 1.7rem;
+      border-left: 1px solid var(--green-dark);
+      margin-left: 0.45rem;
+      margin-bottom: 0.4rem;
+    }
+    .show-row.open .show-detail { display: block; }
+
+    .detail-row {
+      font-size: 0.78rem;
+      line-height: 1.9;
+      color: var(--green-dim);
+      white-space: pre;
+    }
+    .detail-row em { color: var(--green); font-style: normal; }
+    .detail-row.yellow { color: var(--yellow); }
+
+    .btn-tickets {
+      display: inline-block;
+      margin-top: 0.9rem;
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: inherit;
+      font-size: 0.78rem;
+      padding: 0.5rem 1.1rem;
+      cursor: pointer;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background 0.18s, box-shadow 0.18s, color 0.18s;
+    }
+    .btn-tickets:hover {
+      background: var(--green);
+      color: #000;
+      box-shadow: 0 0 18px rgba(0,255,65,0.4);
+    }
+    .btn-tickets::before { content: '> '; }
+
+    .no-shows {
+      margin-top: 0.8rem;
+      font-size: 0.82rem;
+      color: var(--green-dim);
+      line-height: 1.8;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 1.4rem;
+      font-size: 0.75rem;
+      color: var(--green-dim);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+    }
+    .back-link:hover { color: var(--green); }
+  </style>
+</head>
+<body>
+
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — show_schedule.enc</div>
+  </div>
+
+  <div class="terminal-body">
+    <div id="boot"></div>
+    <div id="shows-list" style="display:none"></div>
+    <div id="idle" style="display:none">
+      <a href="index.html" class="back-link">&lt; back to underground</a>
+      <div style="margin-top:1rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api/shows';
+
+  const params  = new URLSearchParams(window.location.search);
+  const zip     = params.get('zip') || '';
+  const bootEl  = document.getElementById('boot');
+  const listEl  = document.getElementById('shows-list');
+  const idleEl  = document.getElementById('idle');
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function appendLine(text, cls) {
+    const d = document.createElement('div');
+    d.className = 'ln' + (cls ? ' ' + cls : '');
+    d.textContent = text || ' ';
+    bootEl.appendChild(d);
+  }
+
+  async function animateLine(text, cls, label, labelColor) {
+    const d = document.createElement('div');
+    d.className = 'ln' + (cls ? ' ' + cls : '');
+    d.textContent = text;
+    bootEl.appendChild(d);
+    await sleep(280);
+    d.innerHTML = text + `  <span style="color:${labelColor || 'var(--green)'}">[ ${label} ]</span>`;
+  }
+
+  function formatPrice(cents) {
+    return '$' + (cents / 100).toFixed(0) + ' / person';
+  }
+
+  function statusLabel(status) {
+    if (status === 'announced') return '<em>OPEN</em>';
+    if (status === 'completed') return '<em style="color:var(--green-dim)">COMPLETED</em>';
+    return '<em style="color:var(--yellow)">COMING SOON</em>';
+  }
+
+  function renderShows(shows) {
+    listEl.style.display = 'block';
+
+    if (shows.length === 0) {
+      listEl.innerHTML = `
+        <div class="no-shows">
+          <div>$ no shows found within 25 miles of ${zip || '...'}</div>
+          <div>$ new markets dropping soon.</div>
+          <div>$ you'll be the first to know.</div>
+        </div>`;
+      return;
+    }
+
+    const count = shows.length;
+    const header = document.createElement('div');
+    header.className = 'ln yellow';
+    header.textContent = `[ ${count} SHOW${count !== 1 ? 'S' : ''} WITHIN 25 MILES ]`;
+    listEl.appendChild(header);
+
+    shows.forEach(show => {
+      const isAnnounced = show.status === 'announced';
+
+      const row = document.createElement('div');
+      row.className = 'show-row';
+      row.innerHTML = `
+        <hr class="sep" />
+        <div class="show-header">
+          <span class="show-arrow">&#9654;</span>
+          <span class="show-date">${show.date}</span>
+          <span class="ln dim">·</span>
+          <span class="show-city">${show.city}</span>
+          <span class="show-miles">${show.miles} mi</span>
+        </div>
+        <div class="show-detail">
+          <div class="detail-row">DATE ............. <em>${show.date}</em></div>
+          <div class="detail-row">CITY ............. <em>${show.city.toUpperCase()}</em></div>
+          <div class="detail-row">TICKETS .......... <em>${formatPrice(show.ticket_price_cents)}</em></div>
+          <div class="detail-row">LOCATION ......... <em>CLASSIFIED</em>
+                     <span style="font-size:0.7rem;color:var(--green-dim)"> // revealed 24hrs prior</span></div>
+          <div class="detail-row">STATUS ........... ${statusLabel(show.status)}</div>
+          ${isAnnounced
+            ? `<a class="btn-tickets" href="https://offlinecomedy.com">Secure your spot</a>
+               <div style="font-size:0.7rem;color:var(--green-dim);margin-top:0.5rem">// reply Y to your show announcement text to purchase</div>`
+            : `<div style="margin-top:0.7rem;font-size:0.75rem;color:var(--green-dim)">// you'll be texted when tickets open</div>`
+          }
+        </div>`;
+
+      row.querySelector('.show-header').addEventListener('click', () => {
+        row.classList.toggle('open');
+      });
+
+      listEl.appendChild(row);
+    });
+
+    const closingSep = document.createElement('hr');
+    closingSep.className = 'sep';
+    listEl.appendChild(closingSep);
+  }
+
+  async function run() {
+    appendLine('OFFLINE COMEDY  //  show_schedule.enc', 'title');
+    appendLine('─'.repeat(52), 'dim');
+    appendLine('', 'dim');
+
+    await sleep(300);
+    await animateLine(`$ locating shows near ${zip || '...'} .........`, 'dim', 'OK');
+    await sleep(500);
+    await animateLine('$ decrypting schedule .....................', 'dim', 'OK');
+    await sleep(400);
+    appendLine('', 'dim');
+
+    try {
+      const res  = await fetch(`${API}?zip=${encodeURIComponent(zip)}`);
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || 'Unknown error');
+
+      renderShows(data);
+    } catch (err) {
+      const errLine = document.createElement('div');
+      errLine.className = 'ln yellow';
+      errLine.textContent = `$ error: ${err.message}`;
+      bootEl.appendChild(errLine);
+    }
+
+    await sleep(300);
+    idleEl.style.display = 'block';
+  }
+
+  run();
+</script>
+</body>
+</html>

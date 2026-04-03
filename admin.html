@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — ADMIN</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #00ff41;
+      --green-dim:  #00b32c;
+      --green-dark: #003b0f;
+      --yellow:     #ffd700;
+      --red:        #ff4444;
+      --bg:         #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(0,255,65,.025) 0px, rgba(0,255,65,.025) 1px, transparent 1px, transparent 2px);
+      pointer-events: none; z-index: 999;
+    }
+
+    .terminal {
+      width: 100%; max-width: 860px;
+      border: 1px solid var(--green-dim);
+      border-radius: 4px;
+      box-shadow: 0 0 24px rgba(0,255,65,.18), 0 0 80px rgba(0,255,65,.06);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--green-dark);
+      border-bottom: 1px solid var(--green-dim);
+      padding: 8px 14px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: .45; }
+    .terminal-title { flex: 1; text-align: center; font-size: .68rem; color: var(--green-dim); letter-spacing: .18em; }
+
+    .terminal-body { padding: 1.4rem 1.6rem 2rem; background: var(--bg); }
+
+    .ln { font-size: .82rem; line-height: 1.65; }
+    .dim    { color: var(--green-dim); }
+    .bright { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,.55); }
+    .yellow { color: var(--yellow); }
+    .red    { color: var(--red); }
+
+    .sep { border: none; border-top: 1px solid var(--green-dark); margin: 1.1rem 0; }
+
+    /* ── Auth screen ── */
+    #auth-screen { }
+    #main-screen { display: none; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-label {
+      display: block; font-size: .74rem; color: var(--green-dim);
+      margin-bottom: .3rem; letter-spacing: .07em;
+    }
+    .form-label em { color: var(--green); font-style: normal; }
+
+    .input-row {
+      display: flex; align-items: center;
+      border: 1px solid var(--green-dark); background: #0a0a0a;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-row:focus-within { border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,65,.2); }
+    .input-pfx { padding: .5rem .65rem; color: var(--green-dim); font-size: .85rem; user-select: none; }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    select {
+      background: transparent; border: none; outline: none;
+      color: var(--green); font-family: inherit; font-size: .88rem;
+      width: 100%; padding: .5rem .5rem .5rem 0; caret-color: var(--green);
+    }
+    input::placeholder { color: #1c4827; }
+
+    select { cursor: pointer; }
+    select option { background: #0a0a0a; color: var(--green); }
+
+    .btn {
+      background: transparent; border: 1px solid var(--green);
+      color: var(--green); font-family: inherit; font-size: .84rem;
+      padding: .65rem 1.2rem; cursor: pointer; letter-spacing: .18em;
+      text-transform: uppercase; transition: background .18s, box-shadow .18s, color .18s;
+    }
+    .btn:hover  { background: var(--green); color: #000; box-shadow: 0 0 18px rgba(0,255,65,.4); }
+    .btn:active { transform: scale(.99); }
+    .btn::before { content: '> '; }
+    .btn.full { width: 100%; }
+
+    .btn.red-btn { border-color: var(--red); color: var(--red); font-size: .72rem; padding: .4rem .8rem; }
+    .btn.red-btn:hover { background: var(--red); color: #000; box-shadow: none; }
+    .btn.red-btn::before { content: ''; }
+
+    .btn.yellow-btn { border-color: var(--yellow); color: var(--yellow); font-size: .72rem; padding: .4rem .8rem; }
+    .btn.yellow-btn:hover { background: var(--yellow); color: #000; box-shadow: none; }
+    .btn.yellow-btn::before { content: ''; }
+
+    .flash {
+      font-size: .78rem; padding: .5rem .8rem;
+      border: 1px solid; margin-bottom: 1rem; display: none;
+    }
+    .flash.ok  { border-color: var(--green); color: var(--green); }
+    .flash.err { border-color: var(--red); color: var(--red); }
+    .flash.show { display: block; }
+
+    /* ── Shows table ── */
+    .shows-table { width: 100%; border-collapse: collapse; font-size: .76rem; margin-top: .6rem; }
+    .shows-table th {
+      color: var(--green-dim); text-align: left; padding: .35rem .6rem;
+      border-bottom: 1px solid var(--green-dark); letter-spacing: .08em;
+    }
+    .shows-table td { padding: .45rem .6rem; border-bottom: 1px solid #0d0d0d; vertical-align: middle; }
+    .shows-table tr:last-child td { border-bottom: none; }
+    .shows-table tr:hover td { background: rgba(0,255,65,.03); }
+
+    .badge {
+      font-size: .65rem; padding: .15rem .5rem; border: 1px solid;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .badge.draft     { border-color: var(--green-dim); color: var(--green-dim); }
+    .badge.announced { border-color: var(--yellow); color: var(--yellow); }
+    .badge.completed { border-color: #444; color: #444; }
+
+    .action-btns { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+    #new-show-section { display: none; margin-top: 1.4rem; }
+    #new-show-section.open { display: block; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.2rem; }
+
+    .toggle-btn {
+      background: none; border: 1px solid var(--green-dark);
+      color: var(--green-dim); font-family: inherit; font-size: .76rem;
+      padding: .45rem .9rem; cursor: pointer; letter-spacing: .12em;
+      transition: border-color .15s, color .15s;
+    }
+    .toggle-btn:hover, .toggle-btn.active { border-color: var(--green); color: var(--green); }
+    .toggle-btn::before { content: '+ '; }
+    .toggle-btn.active::before { content: '- '; }
+
+    .cur {
+      display: inline-block; width: 8px; height: .9em;
+      background: var(--green); vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  </style>
+</head>
+<body>
+
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — admin.enc</div>
+  </div>
+
+  <div class="terminal-body">
+
+    <!-- ── Auth screen ── -->
+    <div id="auth-screen">
+      <div class="ln bright" style="margin-bottom:1rem">[ RESTRICTED ACCESS ]</div>
+      <div class="ln dim" style="margin-bottom:1.4rem">Enter admin key to continue.</div>
+
+      <div id="auth-flash" class="flash"></div>
+
+      <div class="form-group">
+        <label class="form-label" for="admin-key-input"><em>ADMIN_KEY</em></label>
+        <div class="input-row">
+          <span class="input-pfx">$&gt;</span>
+          <input type="password" id="admin-key-input" placeholder="••••••••••••••••••••••" autocomplete="current-password" />
+        </div>
+      </div>
+      <button class="btn full" id="auth-btn">Authenticate</button>
+    </div>
+
+    <!-- ── Main screen ── -->
+    <div id="main-screen">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem">
+        <span class="ln bright">[ SHOW MANAGEMENT ]</span>
+        <button class="btn" id="logout-btn" style="font-size:.7rem;padding:.35rem .8rem;letter-spacing:.12em">Logout</button>
+      </div>
+
+      <hr class="sep" />
+
+      <div id="main-flash" class="flash"></div>
+
+      <!-- Shows list -->
+      <div id="shows-container">
+        <div class="ln dim">$ loading shows...</div>
+      </div>
+
+      <!-- New show toggle -->
+      <div style="margin-top:1.2rem">
+        <button class="toggle-btn" id="toggle-new-show">New Show</button>
+      </div>
+
+      <!-- New show form -->
+      <div id="new-show-section">
+        <hr class="sep" />
+        <div class="ln yellow" style="margin-bottom:1rem">[ CREATE SHOW ]</div>
+
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label" for="s-date"><em>DATE</em>  // e.g. 4.15.26</label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <input type="text" id="s-date" placeholder="4.15.26" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-city"><em>CITY</em></label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <input type="text" id="s-city" placeholder="Turlock" />
+            </div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label" for="s-loc-zip"><em>LOCATION_ZIP</em>  // show center</label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <input type="text" id="s-loc-zip" placeholder="95380" maxlength="10" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="s-price"><em>TICKET_PRICE</em>  // dollars</label>
+            <div class="input-row">
+              <span class="input-pfx">$&gt;</span>
+              <input type="number" id="s-price" placeholder="20" min="1" step="1" />
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="s-zips"><em>NOTIFY_ZIPS</em>  // comma-separated, who gets the SMS blast</label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="text" id="s-zips" placeholder="95380, 95382, 95351" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="s-status"><em>STATUS</em></label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <select id="s-status">
+              <option value="draft">draft</option>
+              <option value="announced">announced</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn full" id="create-show-btn">Create Show</button>
+      </div>
+
+      <hr class="sep" style="margin-top:1.6rem" />
+      <div class="ln dim">&gt; <span class="cur"></span></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api';
+  const KEY_STORE = 'oc_admin_key';
+
+  let adminKey = sessionStorage.getItem(KEY_STORE) || '';
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function flash(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = '$ ' + msg;
+    el.className = 'flash ' + type + ' show';
+    setTimeout(() => el.classList.remove('show'), 4000);
+  }
+
+  function badgeHTML(status) {
+    return `<span class="badge ${status}">${status}</span>`;
+  }
+
+  // ── Load & render shows ────────────────────────────────────────────────────
+  async function loadShows() {
+    const container = document.getElementById('shows-container');
+    container.innerHTML = '<div class="ln dim">$ fetching shows...</div>';
+
+    try {
+      const res  = await fetch(`${API}/admin-shows`, {
+        headers: { 'x-admin-key': adminKey },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      if (!data.length) {
+        container.innerHTML = '<div class="ln dim">$ no shows yet. create one below.</div>';
+        return;
+      }
+
+      let html = `
+        <table class="shows-table">
+          <thead>
+            <tr>
+              <th>DATE</th>
+              <th>CITY</th>
+              <th>LOC ZIP</th>
+              <th>PRICE</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      data.forEach(show => {
+        const price = '$' + (show.ticket_price_cents / 100).toFixed(0);
+        html += `
+          <tr>
+            <td style="color:var(--yellow)">${show.date}</td>
+            <td>${show.city}</td>
+            <td style="color:var(--green-dim)">${show.location_zip || '—'}</td>
+            <td>${price}</td>
+            <td>${badgeHTML(show.status)}</td>
+            <td>
+              <div class="action-btns">
+                ${show.status !== 'announced' && show.status !== 'completed'
+                  ? `<button class="btn yellow-btn" onclick="announceShow('${show.id}', '${show.city}')">&#9654; Announce</button>`
+                  : ''}
+              </div>
+            </td>
+          </tr>`;
+      });
+
+      html += '</tbody></table>';
+      container.innerHTML = html;
+
+    } catch (err) {
+      container.innerHTML = `<div class="ln red">$ error: ${err.message}</div>`;
+    }
+  }
+
+  // ── Announce show ──────────────────────────────────────────────────────────
+  async function announceShow(showId, city) {
+    if (!confirm(`Announce show in ${city}? This will SMS all subscribers in that market.`)) return;
+
+    try {
+      const res  = await fetch(`${API}/announce`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body:    JSON.stringify({ show_id: showId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      flash('main-flash', `Announced! ${data.sent} of ${data.total} texts sent.`, 'ok');
+      loadShows();
+    } catch (err) {
+      flash('main-flash', err.message, 'err');
+    }
+  }
+
+  // ── Create show ────────────────────────────────────────────────────────────
+  document.getElementById('create-show-btn').addEventListener('click', async () => {
+    const date    = document.getElementById('s-date').value.trim();
+    const city    = document.getElementById('s-city').value.trim();
+    const locZip  = document.getElementById('s-loc-zip').value.trim();
+    const price   = parseFloat(document.getElementById('s-price').value) || 20;
+    const zipsRaw = document.getElementById('s-zips').value;
+    const status  = document.getElementById('s-status').value;
+    const zipCodes = zipsRaw.split(',').map(z => z.trim()).filter(Boolean);
+
+    if (!date || !city || !locZip || !zipCodes.length) {
+      flash('main-flash', 'Date, city, location zip, and notify zips are required.', 'err');
+      return;
+    }
+
+    const btn = document.getElementById('create-show-btn');
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+
+    try {
+      const res  = await fetch(`${API}/admin-shows`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body:    JSON.stringify({
+          date, city,
+          location_zip: locZip,
+          zip_codes: zipCodes,
+          ticket_price_cents: Math.round(price * 100),
+          status,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      flash('main-flash', `Show created: ${city} on ${date}`, 'ok');
+      document.getElementById('s-date').value  = '';
+      document.getElementById('s-city').value  = '';
+      document.getElementById('s-loc-zip').value = '';
+      document.getElementById('s-zips').value  = '';
+      document.getElementById('s-price').value = '';
+      document.getElementById('new-show-section').classList.remove('open');
+      document.getElementById('toggle-new-show').classList.remove('active');
+      loadShows();
+    } catch (err) {
+      flash('main-flash', err.message, 'err');
+    } finally {
+      btn.textContent = '> Create Show';
+      btn.disabled = false;
+    }
+  });
+
+  // ── Toggle new show form ───────────────────────────────────────────────────
+  document.getElementById('toggle-new-show').addEventListener('click', function () {
+    this.classList.toggle('active');
+    document.getElementById('new-show-section').classList.toggle('open');
+  });
+
+  // ── Auth ───────────────────────────────────────────────────────────────────
+  function showMain() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+    loadShows();
+  }
+
+  async function authenticate() {
+    const key = document.getElementById('admin-key-input').value.trim();
+    if (!key) return;
+
+    // Verify key against backend
+    const res = await fetch(`${API}/admin-shows`, {
+      headers: { 'x-admin-key': key },
+    });
+
+    if (res.ok || res.status !== 401) {
+      adminKey = key;
+      sessionStorage.setItem(KEY_STORE, key);
+      showMain();
+    } else {
+      flash('auth-flash', 'Invalid admin key.', 'err');
+    }
+  }
+
+  document.getElementById('auth-btn').addEventListener('click', authenticate);
+  document.getElementById('admin-key-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') authenticate();
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', () => {
+    sessionStorage.removeItem(KEY_STORE);
+    adminKey = '';
+    document.getElementById('main-screen').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'block';
+    document.getElementById('admin-key-input').value = '';
+  });
+
+  // Auto-login if key is in session
+  if (adminKey) showMain();
+</script>
+</body>
+</html>

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:      #00ff41;
+      --green-dim:  #00b32c;
+      --green-dark: #003b0f;
+      --yellow:     #ffd700;
+      --bg:         #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    /* CRT scanlines */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,255,65,0.025) 0px,
+        rgba(0,255,65,0.025) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* CRT flicker */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(0,255,65,0.012);
+      pointer-events: none;
+      z-index: 998;
+      animation: flicker 9s infinite;
+    }
+
+    @keyframes flicker {
+      0%,94%,100% { opacity: 1; }
+      95%          { opacity: 0.82; }
+      96%          { opacity: 1; }
+      97.5%        { opacity: 0.88; }
+      99%          { opacity: 1; }
+    }
+
+    /* ── Terminal window ── */
+    .terminal {
+      width: 100%;
+      max-width: 740px;
+      border: 1px solid var(--green-dim);
+      border-radius: 4px;
+      box-shadow:
+        0 0 24px rgba(0,255,65,0.18),
+        0 0 80px rgba(0,255,65,0.06);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--green-dark);
+      border-bottom: 1px solid var(--green-dim);
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: 0.45; }
+
+    .terminal-title {
+      flex: 1;
+      text-align: center;
+      font-size: 0.68rem;
+      color: var(--green-dim);
+      letter-spacing: 0.18em;
+    }
+
+    .terminal-body {
+      padding: 1.4rem 1.6rem 2rem;
+      background: var(--bg);
+      overflow-x: auto;
+    }
+
+    /* ── Text line types ── */
+    .ln {
+      font-size: 0.82rem;
+      line-height: 1.65;
+      white-space: pre;
+    }
+    .ln.title  { color: var(--green); font-size: 0.88rem; letter-spacing: 0.06em; }
+    .ln.dim    { color: var(--green-dim); }
+    .ln.bright { color: var(--green); text-shadow: 0 0 8px rgba(0,255,65,0.55); }
+    .ln.yellow { color: var(--yellow); }
+    .ln.ok     { color: var(--green); }
+
+    /* ── ASCII logo ── */
+    #logo { display: none; margin: 0.6rem 0 1rem; }
+
+    .badge {
+      font-size: clamp(0.48rem, 1.05vw, 0.7rem);
+      line-height: 1.25;
+      white-space: pre;
+      color: var(--green);
+      text-shadow: 0 0 7px rgba(0,255,65,0.45);
+      display: block;
+    }
+
+    /* Logo scan-in — 7 rows reveal left→right */
+    .logo-scan-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 210px;
+      margin: 0 auto 0.6rem;
+      aspect-ratio: 2062 / 1713;
+    }
+
+    /* Dot-matrix overlay (simulates CRT phosphor grid) */
+    .logo-scan-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%, transparent 38%, rgba(5,5,5,0.72) 62%);
+      background-size: 3px 3px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .scan-row {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: calc(100% / 7);
+      top: calc(var(--row) / 7 * 100%);
+      overflow: hidden;
+      clip-path: inset(0 100% 0 0);
+      animation: rowReveal 0.8s ease-in-out both;
+      animation-delay: calc(var(--row) * 0.8s);
+      z-index: 1;
+    }
+
+    .scan-row img {
+      position: absolute;
+      width: 100%;
+      height: 700%;
+      top: calc(var(--row) * -100%);
+      /* invert black→white, crank contrast to push greys to black/white,
+         then shift to terminal green */
+      filter: invert(1) contrast(180%) sepia(1) saturate(10) hue-rotate(88deg)
+              drop-shadow(0 0 10px rgba(0,255,65,0.6));
+    }
+
+    @keyframes rowReveal {
+      from { clip-path: inset(0 100% 0 0); }
+      to   { clip-path: inset(0 0% 0 0); }
+    }
+
+    @keyframes textReveal {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .brand-text {
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      color: var(--green);
+      text-align: center;
+      letter-spacing: 0.18em;
+      text-shadow: 0 0 14px rgba(0,255,65,0.55);
+      margin-top: 0.7rem;
+      white-space: nowrap;
+      animation: textReveal 0.5s ease 5.8s both;
+    }
+
+    .tagline {
+      font-size: 0.78rem;
+      color: var(--green-dim);
+      letter-spacing: 0.25em;
+      text-align: center;
+      animation: textReveal 0.5s ease 6.1s both;
+      margin: 0.8rem 0 0;
+    }
+
+    /* ── Form ── */
+    #form-section { display: none; }
+
+    .sep { border: none; border-top: 1px solid var(--green-dark); margin: 1.2rem 0; }
+
+    .form-note { font-size: 0.78rem; color: var(--green-dim); margin-bottom: 1.1rem; line-height: 1.7; }
+
+    .form-group { margin-bottom: 1rem; }
+
+    .form-label {
+      display: block;
+      font-size: 0.74rem;
+      color: var(--green-dim);
+      margin-bottom: 0.3rem;
+      letter-spacing: 0.07em;
+    }
+    .form-label em { color: var(--green); font-style: normal; }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--green-dark);
+      background: #0a0a0a;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-row:focus-within {
+      border-color: var(--green);
+      box-shadow: 0 0 10px rgba(0,255,65,0.2);
+    }
+    .input-pfx { padding: 0.5rem 0.65rem; color: var(--green-dim); font-size: 0.85rem; user-select: none; }
+
+    input[type="tel"],
+    input[type="text"] {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--green);
+      font-family: inherit;
+      font-size: 0.88rem;
+      width: 100%;
+      padding: 0.5rem 0.5rem 0.5rem 0;
+      caret-color: var(--green);
+    }
+    input::placeholder { color: #1c4827; }
+
+    .check-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+    .check-row input[type="checkbox"] {
+      appearance: none;
+      width: 14px; height: 14px;
+      border: 1px solid var(--green-dim);
+      background: transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+      margin-top: 3px;
+      position: relative;
+    }
+    .check-row input[type="checkbox"]:checked::after {
+      content: 'X';
+      position: absolute;
+      top: -2px; left: 1px;
+      color: var(--green);
+      font-size: 0.72rem;
+      font-family: inherit;
+    }
+    .check-lbl { font-size: 0.7rem; color: var(--green-dim); line-height: 1.55; }
+
+    .btn {
+      width: 100%;
+      background: transparent;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-family: inherit;
+      font-size: 0.84rem;
+      padding: 0.78rem;
+      cursor: pointer;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      transition: background 0.18s, box-shadow 0.18s, color 0.18s;
+    }
+    .btn:hover  { background: var(--green); color: #000; box-shadow: 0 0 22px rgba(0,255,65,0.45); }
+    .btn:active { transform: scale(0.99); }
+    .btn::before { content: '> '; }
+
+    #success { display: none; text-align: center; padding: 1.4rem 0; }
+    #success.show { display: block; }
+
+    /* blinking cursor */
+    .cur {
+      display: inline-block;
+      width: 8px; height: 0.9em;
+      background: var(--green);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* fade-in for sections */
+    .fade-in { animation: fadeIn 0.4s ease forwards; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  </style>
+</head>
+<body>
+
+<div class="terminal">
+
+  <!-- Title bar -->
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — bash — 80×24</div>
+  </div>
+
+  <!-- Body -->
+  <div class="terminal-body">
+
+    <!-- Boot lines injected here -->
+    <div id="boot"></div>
+
+    <!-- Logo (hidden until boot completes) -->
+    <div id="logo">
+      <div class="logo-scan-wrap">
+        <div class="scan-row" style="--row:0"><img src="logo.png" alt="Offline Comedy"></div>
+        <div class="scan-row" style="--row:1"><img src="logo.png" alt=""></div>
+        <div class="scan-row" style="--row:2"><img src="logo.png" alt=""></div>
+        <div class="scan-row" style="--row:3"><img src="logo.png" alt=""></div>
+        <div class="scan-row" style="--row:4"><img src="logo.png" alt=""></div>
+        <div class="scan-row" style="--row:5"><img src="logo.png" alt=""></div>
+        <div class="scan-row" style="--row:6"><img src="logo.png" alt=""></div>
+      </div>
+
+      <div class="brand-text">OFFLINE COMEDY</div>
+
+      <div class="tagline">// no phones. &nbsp; secret location. //</div>
+    </div>
+
+    <!-- Signup form (hidden until logo shown) -->
+    <div id="form-section">
+      <hr class="sep" />
+
+      <div class="form-note">
+        <span style="color:var(--yellow)">[ CLASSIFIED ]</span>  Enter credentials to access the underground network.<br>
+        Show coordinates transmitted 24hrs before curtain. Tell no one.
+      </div>
+
+      <form id="signup-form" action="https://offlinecomedy-backend.vercel.app/api/subscribe" method="POST">
+
+        <div class="form-group">
+          <label class="form-label" for="phone">
+            <em>PHONE_NUMBER</em>  // we text, never call
+          </label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="tel" id="phone" name="phone" placeholder="(555) 000-0000" required autocomplete="tel" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="zip">
+            <em>ZIP_CODE</em>  // shows are near you
+          </label>
+          <div class="input-row">
+            <span class="input-pfx">$&gt;</span>
+            <input type="text" id="zip" name="zip" placeholder="90210" maxlength="10" required autocomplete="postal-code" />
+          </div>
+        </div>
+
+        <div class="check-row">
+          <input type="checkbox" id="consent" name="consent" required />
+          <label class="check-lbl" for="consent">
+            By checking this box, I agree to receive automated SMS messages from
+            Offline Comedy about show announcements and ticket links for my area.
+            Message frequency varies. Msg &amp; data rates may apply.
+            Reply <strong style="color:var(--green)">STOP</strong> to unsubscribe,
+            <strong style="color:var(--green)">HELP</strong> for help.
+            View our <a href="privacy.html" style="color:var(--green)">Privacy Policy</a>
+            and <a href="terms.html" style="color:var(--green)">SMS Terms</a>.
+          </label>
+        </div>
+
+        <button type="submit" class="btn">Join the underground</button>
+      </form>
+
+      <div id="success">
+        <div class="ln yellow">[ TRANSMISSION RECEIVED ]</div>
+        <div class="ln dim" style="margin-top:0.8rem;white-space:normal">
+          You're in the network. Stay close to your phone.<br>
+          When the time comes, you'll know.
+        </div>
+        <div class="ln" style="margin-top:1rem;">&gt; <span class="cur"></span></div>
+      </div>
+    </div>
+
+    <!-- Idle prompt shown after everything loads -->
+    <div id="idle" style="display:none">
+      <span class="ln dim">&gt; </span><span class="cur"></span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── Boot sequence definition ──────────────────────────────────────────────
+  // Each entry: { t: text, cls: css-class, at: ms-from-start, ok: bool, okLabel: str }
+  const SEQ = [
+    { t: 'OFFLINE COMEDY  //  OS v0.1.0',                cls: 'title',  at: 0 },
+    { t: '─'.repeat(52),                                 cls: 'dim',    at: 90 },
+    { t: '',                                             cls: 'dim',    at: 180 },
+    { t: '$ initializing encrypted channel .......',     cls: 'dim',    at: 300,  ok: true },
+    { t: '$ bypassing social media filters .......',     cls: 'dim',    at: 1050, ok: true },
+    { t: '$ locating comedians in your area ......',     cls: 'dim',    at: 1800, ok: true },
+    { t: '$ establishing underground sms relay ...',     cls: 'dim',    at: 2550, ok: true },
+    { t: '$ loading encrypted show schedule .....',      cls: 'dim',    at: 3300, ok: true, okLabel: 'ENCRYPTED' },
+    { t: '',                                             cls: 'dim',    at: 4100 },
+    { t: '$ SYSTEM READY. WELCOME TO THE UNDERGROUND.',  cls: 'bright', at: 4300 },
+    { t: '',                                             cls: 'dim',    at: 4600 },
+  ];
+
+  const bootEl  = document.getElementById('boot');
+  const logoEl  = document.getElementById('logo');
+  const formEl  = document.getElementById('form-section');
+  const idleEl  = document.getElementById('idle');
+
+  function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function appendLine(html, cls) {
+    const d = document.createElement('div');
+    d.className = 'ln' + (cls ? ' ' + cls : '');
+    d.innerHTML = html;
+    bootEl.appendChild(d);
+  }
+
+  // Fake "progress dots" animation on a single line, then stamp OK/FAIL
+  async function animateLine(entry) {
+    const okLabel  = entry.okLabel || 'OK';
+    const okColor  = entry.okLabel ? 'var(--yellow)' : 'var(--green)';
+
+    // Print the base text first
+    const d = document.createElement('div');
+    d.className = 'ln ' + (entry.cls || '');
+    d.textContent = entry.t;
+    bootEl.appendChild(d);
+
+    // Short pause then append [ OK ] inline
+    await sleep(320);
+    d.innerHTML =
+      entry.t +
+      '  <span style="color:' + okColor + '">[ ' + okLabel + ' ]</span>';
+  }
+
+  async function runBoot() {
+    let prev = 0;
+
+    for (const entry of SEQ) {
+      await sleep(entry.at - prev);
+      prev = entry.at;
+
+      if (entry.ok) {
+        await animateLine(entry);
+      } else {
+        appendLine(entry.t || ' ', entry.cls);
+      }
+    }
+
+    // ── Reveal logo (CSS handles row animation + text delay) ──
+    logoEl.style.display = 'block';
+
+    await sleep(1000);
+
+    // ── Reveal form ──
+    formEl.style.display = 'block';
+    formEl.classList.add('fade-in');
+
+    await sleep(400);
+    idleEl.style.display = 'block';
+  }
+
+  runBoot();
+
+  // ── Form submission (AJAX via Formspree) ──────────────────────────────────
+  const form       = document.getElementById('signup-form');
+  const successEl  = document.getElementById('success');
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = form.querySelector('.btn');
+    btn.textContent = 'Transmitting...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(form.action, {
+        method:  'POST',
+        body:    JSON.stringify({
+          phone: document.getElementById('phone').value,
+          zip:   document.getElementById('zip').value,
+        }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        const zip = document.getElementById('zip').value.trim();
+        window.location.href = `shows.html?zip=${encodeURIComponent(zip)}`;
+      } else {
+        btn.textContent = 'Error — try again';
+        btn.disabled = false;
+      }
+    } catch {
+      btn.textContent = 'Error — try again';
+      btn.disabled = false;
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Offline Comedy</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:     #00ff41;
+      --green-dim: #00b32c;
+      --bg:        #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,255,65,0.025) 0px, rgba(0,255,65,0.025) 1px,
+        transparent 1px, transparent 2px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .terminal-bar {
+      background: #003b0f;
+      border: 1px solid var(--green-dim);
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: 0.45; }
+    .bar-title { flex: 1; text-align: center; font-size: 0.68rem; color: var(--green-dim); letter-spacing: 0.18em; }
+
+    .body {
+      border: 1px solid var(--green-dim);
+      border-radius: 0 0 4px 4px;
+      padding: 2rem;
+      background: var(--bg);
+      box-shadow: 0 0 24px rgba(0,255,65,0.12);
+    }
+
+    .back {
+      display: inline-block;
+      color: var(--green-dim);
+      text-decoration: none;
+      font-size: 0.78rem;
+      margin-bottom: 1.8rem;
+      letter-spacing: 0.1em;
+    }
+    .back:hover { color: var(--green); }
+
+    h1 {
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 10px rgba(0,255,65,0.5);
+      margin-bottom: 0.3rem;
+    }
+
+    .effective {
+      font-size: 0.72rem;
+      color: var(--green-dim);
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      color: var(--green);
+      margin: 1.8rem 0 0.6rem;
+      border-bottom: 1px solid #003b0f;
+      padding-bottom: 0.4rem;
+    }
+
+    p, li {
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: #00cc35;
+    }
+
+    ul { padding-left: 1.2rem; margin-top: 0.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    a { color: var(--green); }
+
+    .prompt { color: var(--green-dim); font-size: 0.72rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="bar-title">offlinecomedy.com/privacy — bash — 80×24</div>
+  </div>
+  <div class="body">
+
+    <a class="back" href="index.html">&lt; back</a>
+
+    <h1>// PRIVACY POLICY</h1>
+    <div class="effective">Effective date: April 2, 2026</div>
+
+    <p>Offline Comedy ("we," "us," or "our") operates offlinecomedy.com. This Privacy Policy explains how we collect, use, and protect the information you provide when you sign up to receive show notifications.</p>
+
+    <h2>[ INFORMATION WE COLLECT ]</h2>
+    <p>When you join the Offline Comedy underground network, we collect:</p>
+    <ul>
+      <li>Your mobile phone number</li>
+      <li>Your zip code</li>
+      <li>Your explicit SMS consent (checkbox confirmation and timestamp)</li>
+    </ul>
+    <p>We do not collect your name, email address, payment information, or any other personal data through the signup form.</p>
+
+    <h2>[ HOW WE USE YOUR INFORMATION ]</h2>
+    <p>Your phone number and zip code are used solely for the following purposes:</p>
+    <ul>
+      <li>To send you SMS notifications about upcoming Offline Comedy shows in your area</li>
+      <li>To deliver ticket purchase links when you request them via text</li>
+      <li>To process your opt-out request when you reply STOP</li>
+    </ul>
+    <p>We do not use your information for any other purpose without your explicit consent.</p>
+
+    <h2>[ SMS MESSAGING ]</h2>
+    <p>By providing your phone number and checking the consent box on our website, you agree to receive automated SMS messages from Offline Comedy. Message frequency varies based on show activity in your area. Standard message and data rates may apply.</p>
+    <ul>
+      <li>Reply <strong>STOP</strong> at any time to unsubscribe from all messages.</li>
+      <li>Reply <strong>HELP</strong> for assistance.</li>
+      <li>For support, contact us at <a href="mailto:hello@offlinecomedy.com">hello@offlinecomedy.com</a>.</li>
+    </ul>
+    <p>Opting out will remove your number from all future Offline Comedy SMS communications. You may re-subscribe at any time by visiting offlinecomedy.com and signing up again.</p>
+
+    <h2>[ DATA SHARING ]</h2>
+    <p>We do not sell, trade, rent, or share your personal information with third parties for their marketing purposes. We may share your data with service providers who assist us in operating our platform (such as our SMS provider), strictly for the purpose of delivering our services. These providers are contractually obligated to keep your information confidential.</p>
+
+    <h2>[ DATA RETENTION ]</h2>
+    <p>We retain your phone number and zip code for as long as you are subscribed to our SMS service. If you opt out by replying STOP, your number will be removed from active messaging lists within 24 hours. We may retain records of opt-out requests as required by law.</p>
+
+    <h2>[ YOUR RIGHTS ]</h2>
+    <p>You have the right to:</p>
+    <ul>
+      <li>Opt out of SMS messages at any time by replying STOP</li>
+      <li>Request deletion of your data by contacting us at <a href="mailto:hello@offlinecomedy.com">hello@offlinecomedy.com</a></li>
+      <li>Request a copy of the data we hold about you</li>
+    </ul>
+
+    <h2>[ SECURITY ]</h2>
+    <p>We take reasonable precautions to protect your information. However, no method of transmission over the internet is 100% secure. We use industry-standard practices to safeguard your data.</p>
+
+    <h2>[ CHANGES TO THIS POLICY ]</h2>
+    <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated effective date. Continued use of our service after changes constitutes acceptance of the updated policy.</p>
+
+    <h2>[ CONTACT ]</h2>
+    <p>Questions about this Privacy Policy? Contact us at:<br>
+    <a href="mailto:hello@offlinecomedy.com">hello@offlinecomedy.com</a><br>
+    Offline Comedy · offlinecomedy.com</p>
+
+    <div class="prompt">&gt; end of document_</div>
+
+  </div>
+</div>
+</body>
+</html>

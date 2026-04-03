@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMS Terms — Offline Comedy</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green:     #00ff41;
+      --green-dim: #00b32c;
+      --bg:        #050505;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--green);
+      font-family: 'Share Tech Mono', 'Courier New', monospace;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      display: flex;
+      justify-content: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,255,65,0.025) 0px, rgba(0,255,65,0.025) 1px,
+        transparent 1px, transparent 2px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .wrap { width: 100%; max-width: 700px; }
+
+    .terminal-bar {
+      background: #003b0f;
+      border: 1px solid var(--green-dim);
+      border-bottom: none;
+      border-radius: 4px 4px 0 0;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dots { display: flex; gap: 6px; }
+    .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: 0.45; }
+    .bar-title { flex: 1; text-align: center; font-size: 0.68rem; color: var(--green-dim); letter-spacing: 0.18em; }
+
+    .body {
+      border: 1px solid var(--green-dim);
+      border-radius: 0 0 4px 4px;
+      padding: 2rem;
+      background: var(--bg);
+      box-shadow: 0 0 24px rgba(0,255,65,0.12);
+    }
+
+    .back {
+      display: inline-block;
+      color: var(--green-dim);
+      text-decoration: none;
+      font-size: 0.78rem;
+      margin-bottom: 1.8rem;
+      letter-spacing: 0.1em;
+    }
+    .back:hover { color: var(--green); }
+
+    h1 {
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      text-shadow: 0 0 10px rgba(0,255,65,0.5);
+      margin-bottom: 0.3rem;
+    }
+
+    .effective {
+      font-size: 0.72rem;
+      color: var(--green-dim);
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      color: var(--green);
+      margin: 1.8rem 0 0.6rem;
+      border-bottom: 1px solid #003b0f;
+      padding-bottom: 0.4rem;
+    }
+
+    p, li {
+      font-size: 0.78rem;
+      line-height: 1.8;
+      color: #00cc35;
+    }
+
+    ul { padding-left: 1.2rem; margin-top: 0.4rem; }
+    li { margin-bottom: 0.3rem; }
+
+    .highlight {
+      border: 1px solid var(--green-dim);
+      padding: 1rem 1.2rem;
+      margin: 1.2rem 0;
+      background: #031a08;
+    }
+
+    .highlight p { color: var(--green); }
+
+    a { color: var(--green); }
+    strong { color: var(--green); }
+
+    .prompt { color: var(--green-dim); font-size: 0.72rem; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="bar-title">offlinecomedy.com/terms — bash — 80×24</div>
+  </div>
+  <div class="body">
+
+    <a class="back" href="index.html">&lt; back</a>
+
+    <h1>// SMS TERMS OF SERVICE</h1>
+    <div class="effective">Effective date: April 2, 2026</div>
+
+    <p>These SMS Terms of Service ("SMS Terms") govern your participation in text message communications from Offline Comedy. By opting in, you agree to these terms.</p>
+
+    <h2>[ PROGRAM DESCRIPTION ]</h2>
+    <p>Offline Comedy operates an underground live comedy event network. Our SMS program is used to:</p>
+    <ul>
+      <li>Notify subscribers of new show announcements in their local area</li>
+      <li>Facilitate ticket purchases via a conversational SMS flow</li>
+      <li>Deliver show detail updates (e.g., confirmed location) prior to event date</li>
+    </ul>
+    <p>Messages are sent only to users who have explicitly opted in through offlinecomedy.com.</p>
+
+    <h2>[ HOW TO OPT IN ]</h2>
+    <p>To receive SMS messages from Offline Comedy, you must visit <strong>offlinecomedy.com</strong>, enter your mobile phone number and zip code, and check the consent checkbox confirming you agree to receive automated SMS messages. Opting in is entirely voluntary.</p>
+
+    <h2>[ MESSAGE FREQUENCY ]</h2>
+    <p>Message frequency varies. You will only receive messages when a new show is announced or scheduled in your area, or when you are actively participating in a ticket purchase conversation. Expect approximately 1–4 messages per show announcement.</p>
+
+    <div class="highlight">
+      <p><strong>Example messages you may receive:</strong></p>
+      <br>
+      <p>"Offline announced. 4.15.26. Go offline? Reply Y to claim your spot or N to pass. Msg&amp;data rates may apply. Reply STOP to unsubscribe."</p>
+      <br>
+      <p>"How many will be going offline? Reply with the number of guests (e.g., 2)."</p>
+      <br>
+      <p>"Your offline tickets: [link]. Show details drop 24hrs before. Tell no one. Reply STOP to opt out."</p>
+    </div>
+
+    <h2>[ COSTS ]</h2>
+    <p>Offline Comedy does not charge for SMS messages. However, standard message and data rates may apply depending on your mobile carrier and plan. Contact your carrier for details.</p>
+
+    <h2>[ HOW TO OPT OUT ]</h2>
+    <p>You may unsubscribe from Offline Comedy SMS messages at any time by replying <strong>STOP</strong> to any message we send. After opting out, you will receive one final confirmation message and no further messages will be sent. You may re-subscribe at any time by visiting offlinecomedy.com.</p>
+
+    <h2>[ HOW TO GET HELP ]</h2>
+    <p>Reply <strong>HELP</strong> to any Offline Comedy text message to receive support information. You may also contact us directly at <a href="mailto:hello@offlinecomedy.com">hello@offlinecomedy.com</a>.</p>
+
+    <h2>[ SUPPORTED CARRIERS ]</h2>
+    <p>Offline Comedy SMS is available on all major US carriers including AT&amp;T, Verizon, T-Mobile, and others. Carrier support may vary.</p>
+
+    <h2>[ YOUR CONSENT ]</h2>
+    <p>By opting in, you confirm that:</p>
+    <ul>
+      <li>You are the account holder or have permission to opt in the number provided</li>
+      <li>You are 18 years of age or older</li>
+      <li>You consent to receive automated recurring SMS messages from Offline Comedy</li>
+      <li>You understand that consent is not a condition of any purchase</li>
+    </ul>
+
+    <h2>[ PRIVACY ]</h2>
+    <p>Your phone number and zip code are used only to deliver Offline Comedy show notifications and ticket links. We do not sell or share your number with third parties for marketing. See our full <a href="privacy.html">Privacy Policy</a> for details.</p>
+
+    <h2>[ CHANGES TO THESE TERMS ]</h2>
+    <p>We may update these SMS Terms from time to time. Continued participation in our SMS program after changes are posted constitutes acceptance of the updated terms.</p>
+
+    <h2>[ CONTACT ]</h2>
+    <p>
+      Offline Comedy<br>
+      <a href="mailto:hello@offlinecomedy.com">hello@offlinecomedy.com</a><br>
+      offlinecomedy.com
+    </p>
+
+    <div class="prompt">&gt; end of document_</div>
+
+  </div>
+</div>
+</body>
+</html>
