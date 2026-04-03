@@ -326,18 +326,18 @@
       if (!res.ok) throw new Error(data.error);
 
       // Initialize Stripe Connect embedded onboarding
-      const stripeConnectInstance = StripeConnect(STRIPE_PK);
-
-      const onboardingComponent = stripeConnectInstance.create('account-onboarding', {
-        clientSecret: data.client_secret,
-      });
-
-      onboardingComponent.addEventListener('exit', () => {
-        checkOnboardingStatus();
+      const stripeConnectInstance = StripeConnect.init({
+        publishableKey: STRIPE_PK,
+        fetchClientSecret: () => data.client_secret,
       });
 
       container.innerHTML = '';
-      container.appendChild(onboardingComponent);
+      const onboardingEl = stripeConnectInstance.create('account-onboarding');
+      container.appendChild(onboardingEl);
+
+      onboardingEl.addEventListener('exit', () => {
+        checkOnboardingStatus();
+      });
 
     } catch (err) {
       container.innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
