@@ -326,9 +326,10 @@
           ${show.tickets_remaining !== null
             ? `<div class="detail-row">TICKETS LEFT ..... <em>${show.tickets_remaining > 0 ? show.tickets_remaining + ' remaining' : 'SOLD OUT'}</em></div>`
             : ''}
-          ${isAnnounced
-            ? `<a class="btn-tickets" href="https://offlinecomedy.com">Secure your spot</a>
-               <div style="font-size:0.7rem;color:var(--green-dim);margin-top:0.5rem">// reply Y to your show announcement text to purchase</div>`
+          ${isAnnounced && (show.tickets_remaining === null || show.tickets_remaining > 0)
+            ? `<a class="btn-tickets" href="tickets.html?show_id=${show.id}">Secure your spot</a>`
+            : isAnnounced && show.tickets_remaining <= 0
+            ? `<div style="margin-top:0.7rem;font-size:0.75rem;color:var(--red, #ff4444)">// SOLD OUT</div>`
             : `<div style="margin-top:0.7rem;font-size:0.75rem;color:var(--green-dim)">// you'll be texted when tickets open</div>`
           }
         </div>`;
