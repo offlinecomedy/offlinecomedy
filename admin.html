@@ -489,6 +489,15 @@
                   : show.day_of_sent
                   ? `<span style="font-size:.68rem;color:var(--green-dim)">&#10003; Day-of sent</span>`
                   : ''}
+                <button class="btn" onclick="toggleMessageBox('${show.id}')" style="font-size:.72rem;padding:.4rem .8rem;border-color:var(--green-dim);color:var(--green-dim)">&#9993; Message</button>
+              </div>
+              <div id="msg-box-${show.id}" style="display:none; margin-top:.5rem;">
+                <textarea id="msg-text-${show.id}" placeholder="Type your message to all ticket holders..." style="background:#0a0a0a; border:1px solid var(--green-dark); color:var(--green); font-family:inherit; font-size:.78rem; width:100%; padding:.4rem; min-height:60px; resize:vertical; outline:none;"></textarea>
+                <div style="display:flex; gap:.4rem; margin-top:.3rem;">
+                  <button class="btn" onclick="sendMessage('${show.id}')" style="font-size:.7rem;padding:.3rem .6rem;">Send</button>
+                  <button class="btn" onclick="toggleMessageBox('${show.id}')" style="font-size:.7rem;padding:.3rem .6rem;border-color:var(--green-dim);color:var(--green-dim)">Cancel</button>
+                </div>
+                <div id="msg-flash-${show.id}" style="font-size:.7rem; margin-top:.3rem; min-height:1em;"></div>
               </div>
             </td>
           </tr>`;
@@ -499,6 +508,40 @@
 
     } catch (err) {
       container.innerHTML = `<div class="ln red">$ error: ${err.message}</div>`;
+    }
+  }
+
+  // ── Message Guests ──────────────────────────────────────────────────────
+  function toggleMessageBox(showId) {
+    const box = document.getElementById(`msg-box-${showId}`);
+    box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  }
+
+  async function sendMessage(showId) {
+    const textarea = document.getElementById(`msg-text-${showId}`);
+    const flash = document.getElementById(`msg-flash-${showId}`);
+    const message = textarea.value.trim();
+
+    if (!message) { flash.textContent = 'Message cannot be empty'; flash.style.color = 'var(--red)'; return; }
+    if (!confirm('Send this message to all ticket holders?')) return;
+
+    flash.textContent = 'Sending...';
+    flash.style.color = 'var(--green-dim)';
+
+    try {
+      const res = await fetch(`${API}/message-guests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ show_id: showId, message }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      flash.textContent = `Sent to ${data.sent} of ${data.total} guest(s)`;
+      flash.style.color = 'var(--green)';
+      textarea.value = '';
+    } catch (err) {
+      flash.textContent = err.message;
+      flash.style.color = 'var(--red)';
     }
   }
 
