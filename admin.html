@@ -238,11 +238,12 @@
 
         <div class="two-col">
           <div class="form-group">
-            <label class="form-label" for="s-loc-zip"><em>LOCATION_ZIP</em>  // show center</label>
+            <label class="form-label" for="s-loc-zip"><em>LOCATION_ZIP</em>  // notify zips auto-fill</label>
             <div class="input-row">
               <span class="input-pfx">$&gt;</span>
-              <input type="text" id="s-loc-zip" placeholder="95380" maxlength="10" />
+              <input type="text" id="s-loc-zip" placeholder="95380" maxlength="10" autocomplete="off" />
             </div>
+            <div id="zip-radius-status" style="font-size:.7rem;color:var(--green-dim);margin-top:.3rem;min-height:1rem"></div>
           </div>
           <div class="form-group">
             <label class="form-label" for="s-price"><em>TICKET_PRICE</em>  // dollars</label>
@@ -426,6 +427,34 @@
       btn.textContent = '> Create Show';
       btn.disabled = false;
     }
+  });
+
+  // ── Auto-fill notify zips from location zip ────────────────────────────────
+  let zipDebounce;
+  document.getElementById('s-loc-zip').addEventListener('input', function () {
+    const zip = this.value.trim();
+    const statusEl = document.getElementById('zip-radius-status');
+    clearTimeout(zipDebounce);
+
+    if (zip.length < 5) {
+      statusEl.textContent = '';
+      return;
+    }
+
+    statusEl.textContent = '$ scanning radius...';
+    zipDebounce = setTimeout(async () => {
+      try {
+        const res  = await fetch(`${API}/zip-radius?zip=${encodeURIComponent(zip)}&miles=25`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        document.getElementById('s-zips').value = data.join(', ');
+        statusEl.textContent = `$ ${data.length} zip codes within 25 miles`;
+        statusEl.style.color = 'var(--green)';
+      } catch (err) {
+        statusEl.textContent = `$ error: ${err.message}`;
+        statusEl.style.color = 'var(--red)';
+      }
+    }, 600);
   });
 
   // ── Toggle new show form ───────────────────────────────────────────────────
