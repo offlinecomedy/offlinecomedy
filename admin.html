@@ -772,12 +772,27 @@
     document.getElementById('s-age').value        = show.age_requirement || '';
     document.getElementById('s-drinks').value     = show.drinks         || '';
     document.getElementById('s-status').value     = show.status         || 'draft';
-    document.getElementById('s-day-msg').value    = show.day_of_message || '';
-
     // Venue
     if (show.venue_id) {
       const venue = allVenues.find(v => v.id === show.venue_id);
       if (venue) selectVenue(venue);
+    }
+
+    // Day-of message: use saved or pre-fill with venue template
+    if (show.day_of_message) {
+      document.getElementById('s-day-msg').value = show.day_of_message;
+    } else {
+      const v = show.venues;
+      let msg = `Tonight's the night! Here are your Offline Comedy show details:\n\n`;
+      if (v) {
+        msg += `Location: ${v.name}\n${v.address}\n${v.city}, ${v.state} ${v.zip_code}\n`;
+      } else {
+        msg += `Location: ${show.city} (full address coming soon)\n`;
+      }
+      msg += `Time: ${show.show_time || 'TBD'}\n`;
+      msg += `\nREMINDER: This is an offline experience. No phone usage is permitted during the show. Phones must be stored away upon entry.\n`;
+      msg += `\nSee you there!`;
+      document.getElementById('s-day-msg').value = msg;
     }
 
     // Comedians
