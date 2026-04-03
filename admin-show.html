@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OFFLINE COMEDY — SHOW DETAIL</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root { --green:#00ff41; --green-dim:#00b32c; --green-dark:#003b0f; --yellow:#ffd700; --red:#ff4444; --bg:#050505; }
+    body { background:var(--bg); color:var(--green); font-family:'Share Tech Mono','Courier New',monospace; min-height:100vh; display:flex; align-items:flex-start; justify-content:center; padding:2rem 1rem; }
+    body::before { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,rgba(0,255,65,.025) 0px,rgba(0,255,65,.025) 1px,transparent 1px,transparent 2px); pointer-events:none; z-index:999; }
+    .terminal { width:100%; max-width:740px; border:1px solid var(--green-dim); border-radius:4px; box-shadow:0 0 24px rgba(0,255,65,.18); overflow:hidden; }
+    .terminal-bar { background:var(--green-dark); border-bottom:1px solid var(--green-dim); padding:8px 14px; display:flex; align-items:center; gap:10px; }
+    .dots { display:flex; gap:6px; }
+    .dot { width:11px; height:11px; border-radius:50%; background:var(--green-dim); opacity:.45; }
+    .terminal-title { flex:1; text-align:center; font-size:.68rem; color:var(--green-dim); letter-spacing:.18em; }
+    .terminal-body { padding:1.4rem 1.6rem 2rem; background:var(--bg); }
+    .ln { font-size:.82rem; line-height:1.65; }
+    .dim { color:var(--green-dim); }
+    .bright { color:var(--green); text-shadow:0 0 8px rgba(0,255,65,.55); }
+    .yellow { color:var(--yellow); }
+    .sep { border:none; border-top:1px solid var(--green-dark); margin:1rem 0; }
+    .row { font-size:.78rem; line-height:1.9; color:var(--green-dim); }
+    .row em { color:var(--green); font-style:normal; }
+    .row.loc em { color:var(--yellow); }
+    .section-label { font-size:.72rem; color:var(--green-dim); letter-spacing:.15em; margin:1rem 0 .4rem; text-transform:uppercase; }
+    .badge { display:inline-block; font-size:.68rem; padding:.15rem .5rem; border:1px solid; border-radius:2px; letter-spacing:.1em; }
+    .badge.draft { border-color:var(--green-dim); color:var(--green-dim); }
+    .badge.announced { border-color:var(--yellow); color:var(--yellow); }
+    .badge.completed { border-color:var(--green); color:var(--green); }
+    textarea { background:#0a0a0a; border:1px solid var(--green-dark); color:var(--green); font-family:inherit; font-size:.82rem; width:100%; padding:.5rem; min-height:80px; resize:vertical; outline:none; }
+    textarea:focus { border-color:var(--green); }
+    textarea::placeholder { color:#1c4827; }
+    .btn { background:transparent; border:1px solid var(--green); color:var(--green); font-family:inherit; font-size:.78rem; padding:.5rem 1rem; cursor:pointer; letter-spacing:.15em; text-transform:uppercase; transition:background .18s, box-shadow .18s, color .18s; }
+    .btn:hover { background:var(--green); color:#000; box-shadow:0 0 18px rgba(0,255,65,.4); }
+    .btn:disabled { opacity:.4; cursor:not-allowed; }
+    .btn-orange { border-color:#ff8c00; color:#ff8c00; }
+    .btn-orange:hover { background:#ff8c00; color:#000; box-shadow:0 0 18px rgba(255,140,0,.4); }
+    .btn-dim { border-color:var(--green-dim); color:var(--green-dim); }
+    .btn-dim:hover { background:var(--green-dim); color:#000; }
+    .btn-row { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem; }
+    .flash { font-size:.76rem; padding:.4rem .7rem; border:1px solid; margin:.5rem 0; display:none; }
+    .flash.err { border-color:var(--red); color:var(--red); }
+    .flash.ok { border-color:var(--green); color:var(--green); }
+    .flash.show { display:block; }
+    .back-link { display:inline-block; margin-top:1.2rem; font-size:.75rem; color:var(--green-dim); text-decoration:none; letter-spacing:.1em; }
+    .back-link:hover { color:var(--green); }
+    .stat-row { display:flex; gap:1.5rem; flex-wrap:wrap; margin:.5rem 0; }
+    .stat { font-size:.74rem; color:var(--green-dim); }
+    .stat em { color:var(--green); font-style:normal; font-size:.88rem; }
+    .link-box { border:1px solid var(--green-dark); padding:.6rem .8rem; background:rgba(0,255,65,.02); margin-top:.5rem; }
+    .link-box input { background:transparent; border:none; color:var(--green); font-family:inherit; font-size:.76rem; width:100%; outline:none; }
+    .link-box .copy-btn { font-size:.68rem; color:var(--green-dim); cursor:pointer; text-decoration:underline; margin-top:.3rem; display:inline-block; }
+    .link-box .copy-btn:hover { color:var(--green); }
+    .cur { display:inline-block; width:8px; height:.9em; background:var(--green); vertical-align:text-bottom; animation:blink 1s step-end infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  </style>
+</head>
+<body>
+<div class="terminal">
+  <div class="terminal-bar">
+    <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="terminal-title">offlinecomedy.com — show_detail.enc</div>
+  </div>
+  <div class="terminal-body">
+    <div id="loading"><div class="ln dim">$ loading show<span class="cur"></span></div></div>
+    <div id="content" style="display:none"></div>
+    <a href="admin.html" class="back-link">&lt; back to shows</a>
+    <div style="margin-top:1rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
+  </div>
+</div>
+
+<script>
+  const API = 'https://offlinecomedy-backend.vercel.app/api';
+  const params = new URLSearchParams(window.location.search);
+  const showId = params.get('id');
+  const adminKey = sessionStorage.getItem('admin_key');
+
+  if (!adminKey) {
+    window.location.href = 'admin.html';
+  }
+
+  let show = null;
+
+  function flash(id, msg, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = '$ ' + msg;
+    el.className = `flash ${type} show`;
+  }
+
+  async function loadShow() {
+    if (!showId) {
+      document.getElementById('loading').innerHTML = '<div class="ln yellow">$ no show specified</div>';
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API}/admin-shows?id=${showId}`, {
+        headers: { 'x-admin-key': adminKey },
+      });
+      show = await res.json();
+      if (!res.ok) throw new Error(show.error);
+      renderShow();
+    } catch (err) {
+      document.getElementById('loading').innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
+    }
+  }
+
+  function badgeHTML(status) {
+    return `<span class="badge ${status}">${status.toUpperCase()}</span>`;
+  }
+
+  function renderShow() {
+    document.getElementById('loading').style.display = 'none';
+    const el = document.getElementById('content');
+    el.style.display = 'block';
+
+    const venue = show.venues || (show.show_comedians ? null : null);
+    const ticketsSold = show.tickets_sold || 0;
+    const remaining = show.capacity ? show.capacity - ticketsSold : null;
+
+    // Build venue info for day-of pre-populate
+    let venueText = '';
+    if (show.venue_id) {
+      // We need to fetch venue separately or it's in the response
+      // admin-shows with ?id= returns show_comedians but not venues directly
+      // Let's handle this below
+    }
+
+    const ticketLink = `https://offlinecomedy.com/tickets.html?show_id=${show.id}`;
+    const checkinLink = `https://offlinecomedy.com/checkin.html`;
+    const guestLink = `https://offlinecomedy.com/mytickets.html`;
+
+    el.innerHTML = `
+      <div class="ln bright" style="margin-bottom:.5rem">[ ${show.city.toUpperCase()} — ${show.date} ]</div>
+      <div style="margin-bottom:.8rem">${badgeHTML(show.status)}</div>
+
+      <div class="row">DATE ............. <em>${show.date}</em></div>
+      <div class="row">CITY ............. <em>${show.city.toUpperCase()}</em></div>
+      ${show.show_time ? `<div class="row">TIME ............. <em>${show.show_time}</em></div>` : ''}
+      <div class="row">PRICE ............ <em>$${(show.ticket_price_cents / 100).toFixed(0)}</em></div>
+      ${show.venue_type ? `<div class="row">VENUE TYPE ....... <em>${show.venue_type}</em></div>` : ''}
+      ${show.age_requirement ? `<div class="row">AGE .............. <em>${show.age_requirement}</em></div>` : ''}
+      ${show.drinks ? `<div class="row">DRINKS ........... <em>${show.drinks}</em></div>` : ''}
+      ${show.capacity ? `<div class="row">CAPACITY ......... <em>${show.capacity}</em></div>` : ''}
+
+      <div class="stat-row" style="margin-top:.6rem">
+        ${remaining !== null ? `<div class="stat">SOLD<br><em>${ticketsSold}</em></div><div class="stat">REMAINING<br><em>${remaining}</em></div>` : ''}
+      </div>
+
+      <hr class="sep" />
+
+      <!-- Ticket Link for Guests -->
+      <div class="section-label">ticket purchase link</div>
+      <div class="link-box">
+        <input type="text" id="ticket-link" value="${ticketLink}" readonly onclick="this.select()" />
+        <span class="copy-btn" onclick="copyLink('ticket-link')">copy link</span>
+      </div>
+
+      <!-- Guest Ticket Page Link -->
+      <div class="section-label">guest ticket page</div>
+      <div class="link-box">
+        <input type="text" id="guest-link" value="${guestLink}" readonly onclick="this.select()" />
+        <span class="copy-btn" onclick="copyLink('guest-link')">copy link</span>
+      </div>
+
+      <hr class="sep" />
+
+      <!-- Day-of Message -->
+      <div class="section-label">day-of message</div>
+      ${show.day_of_sent
+        ? `<div class="ln dim" style="font-size:.74rem; margin-bottom:.3rem">&#10003; Already sent</div>`
+        : ''}
+      <textarea id="day-of-msg" placeholder="Hey! Here are your show details for tonight...">${show.day_of_message || ''}</textarea>
+      <div class="btn-row">
+        <button class="btn btn-dim" id="save-dayof-btn" style="font-size:.72rem; padding:.4rem .8rem;">Save message</button>
+        ${!show.day_of_sent ? `<button class="btn btn-orange" id="send-dayof-btn" style="font-size:.72rem; padding:.4rem .8rem;">Send day-of now</button>` : ''}
+        <button class="btn btn-dim" id="prepop-btn" style="font-size:.72rem; padding:.4rem .8rem;">Pre-fill venue info</button>
+      </div>
+      <div id="dayof-flash" class="flash"></div>
+
+      <hr class="sep" />
+
+      <!-- Message Guests -->
+      <div class="section-label">message guests</div>
+      <textarea id="msg-text" placeholder="Type a message to all ticket holders..."></textarea>
+      <div class="btn-row">
+        <button class="btn" id="send-msg-btn" style="font-size:.72rem; padding:.4rem .8rem;">Send message</button>
+      </div>
+      <div id="msg-flash" class="flash"></div>
+
+      <hr class="sep" />
+
+      <!-- Navigation -->
+      <div class="section-label">actions</div>
+      <div class="btn-row">
+        <button class="btn btn-dim" onclick="window.location.href='admin.html'" style="font-size:.72rem; padding:.4rem .8rem;">&#9998; Edit show</button>
+        <a href="${checkinLink}" class="btn btn-dim" style="font-size:.72rem; padding:.4rem .8rem; text-decoration:none;">&#10003; Guest check-in</a>
+      </div>
+    `;
+
+    // Wire up buttons
+    document.getElementById('save-dayof-btn').addEventListener('click', saveDayOf);
+    const sendDayOfBtn = document.getElementById('send-dayof-btn');
+    if (sendDayOfBtn) sendDayOfBtn.addEventListener('click', sendDayOf);
+    document.getElementById('prepop-btn').addEventListener('click', preFillVenue);
+    document.getElementById('send-msg-btn').addEventListener('click', sendMessage);
+
+    // Pre-fill day-of message with venue if empty
+    if (!show.day_of_message) {
+      preFillVenue();
+    }
+  }
+
+  function preFillVenue() {
+    const textarea = document.getElementById('day-of-msg');
+    const v = show.venues;
+
+    let msg = `It's showtime! Here are your details for tonight's Offline Comedy show:\n\n`;
+    msg += `Date: ${show.date}\n`;
+    msg += `Time: ${show.show_time || 'TBD'}\n`;
+    if (v) {
+      msg += `\nVenue: ${v.name}\nAddress: ${v.address}\n${v.city}, ${v.state} ${v.zip_code}`;
+    } else {
+      msg += `City: ${show.city}`;
+    }
+    msg += `\n\nSee you there!`;
+    textarea.value = msg;
+  }
+
+  async function saveDayOf() {
+    const msg = document.getElementById('day-of-msg').value.trim();
+    const btn = document.getElementById('save-dayof-btn');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/admin-shows`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ id: showId, day_of_message: msg || null }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+      show.day_of_message = msg;
+      flash('dayof-flash', 'Saved!', 'ok');
+    } catch (err) {
+      flash('dayof-flash', err.message, 'err');
+    }
+    btn.disabled = false;
+  }
+
+  async function sendDayOf() {
+    // Save first
+    await saveDayOf();
+    if (!show.day_of_message) {
+      flash('dayof-flash', 'Write a message first', 'err');
+      return;
+    }
+    if (!confirm('Send day-of message to all ticket holders?')) return;
+
+    try {
+      const res = await fetch(`${API}/send-day-of`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ show_id: showId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      flash('dayof-flash', `Sent to ${data.sent} guest(s)!`, 'ok');
+      show.day_of_sent = true;
+    } catch (err) {
+      flash('dayof-flash', err.message, 'err');
+    }
+  }
+
+  async function sendMessage() {
+    const msg = document.getElementById('msg-text').value.trim();
+    if (!msg) { flash('msg-flash', 'Message cannot be empty', 'err'); return; }
+    if (!confirm('Send this message to all ticket holders?')) return;
+
+    const btn = document.getElementById('send-msg-btn');
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/message-guests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ show_id: showId, message: msg }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      flash('msg-flash', `Sent to ${data.sent} of ${data.total} guest(s)`, 'ok');
+      document.getElementById('msg-text').value = '';
+    } catch (err) {
+      flash('msg-flash', err.message, 'err');
+    }
+    btn.disabled = false;
+  }
+
+  function copyLink(inputId) {
+    const input = document.getElementById(inputId);
+    input.select();
+    navigator.clipboard.writeText(input.value);
+    input.style.color = 'var(--yellow)';
+    setTimeout(() => { input.style.color = ''; }, 800);
+  }
+
+  loadShow();
+</script>
+</body>
+</html>

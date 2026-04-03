@@ -471,7 +471,7 @@
           ? `<span style="color:var(--green)">${show.tickets_remaining}</span><span style="color:var(--green-dim)"> / ${show.capacity} remaining</span>`
           : '<span style="color:var(--green-dim)">—</span>';
         html += `
-          <tr>
+          <tr style="cursor:pointer" onclick="if(!event.target.closest('button')){window.location.href='admin-show.html?id=${show.id}'}">
             <td style="color:var(--yellow)">${show.date}</td>
             <td>${show.city}</td>
             <td style="color:var(--green-dim)">${show.location_zip || '—'}</td>
