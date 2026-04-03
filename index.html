@@ -125,7 +125,7 @@
       display: block;
     }
 
-    /* Logo scan-in — 7 rows reveal left→right */
+    /* Logo dot-scatter reveal */
     .logo-scan-wrap {
       position: relative;
       width: 100%;
@@ -134,44 +134,13 @@
       aspect-ratio: 2062 / 1713;
     }
 
-    /* Dot-matrix overlay (simulates CRT phosphor grid) */
-    .logo-scan-wrap::after {
-      content: '';
+
+    #logo-canvas {
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at 50% 50%, transparent 38%, rgba(5,5,5,0.72) 62%);
-      background-size: 3px 3px;
-      pointer-events: none;
-      z-index: 2;
-    }
-
-    .scan-row {
-      position: absolute;
-      left: 0;
       width: 100%;
-      height: calc(100% / 7);
-      top: calc(var(--row) / 7 * 100%);
-      overflow: hidden;
-      clip-path: inset(0 100% 0 0);
-      animation: rowReveal 0.8s ease-in-out both;
-      animation-delay: calc(var(--row) * 0.8s);
-      z-index: 1;
-    }
-
-    .scan-row img {
-      position: absolute;
-      width: 100%;
-      height: 700%;
-      top: calc(var(--row) * -100%);
-      /* invert black→white, crank contrast to push greys to black/white,
-         then shift to terminal green */
-      filter: invert(1) contrast(180%) sepia(1) saturate(10) hue-rotate(88deg)
-              drop-shadow(0 0 10px rgba(0,255,65,0.6));
-    }
-
-    @keyframes rowReveal {
-      from { clip-path: inset(0 100% 0 0); }
-      to   { clip-path: inset(0 0% 0 0); }
+      height: 100%;
+      filter: drop-shadow(0 0 10px rgba(0,255,65,0.6));
     }
 
     @keyframes textReveal {
@@ -324,13 +293,7 @@
     <!-- Logo (hidden until boot completes) -->
     <div id="logo">
       <div class="logo-scan-wrap">
-        <div class="scan-row" style="--row:0"><img src="logo.png" alt="Offline Comedy"></div>
-        <div class="scan-row" style="--row:1"><img src="logo.png" alt=""></div>
-        <div class="scan-row" style="--row:2"><img src="logo.png" alt=""></div>
-        <div class="scan-row" style="--row:3"><img src="logo.png" alt=""></div>
-        <div class="scan-row" style="--row:4"><img src="logo.png" alt=""></div>
-        <div class="scan-row" style="--row:5"><img src="logo.png" alt=""></div>
-        <div class="scan-row" style="--row:6"><img src="logo.png" alt=""></div>
+        <canvas id="logo-canvas" width="210" height="174" aria-label="Offline Comedy"></canvas>
       </div>
 
       <div class="brand-text">OFFLINE COMEDY</div>
@@ -452,6 +415,68 @@
       '  <span style="color:' + okColor + '">[ ' + okLabel + ' ]</span>';
   }
 
+  // ── Logo dot-scatter animation ────────────────────────────────────────────
+  function animateLogo() {
+    const canvas = document.getElementById('logo-canvas');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const BG = getComputedStyle(document.querySelector('.terminal-body')).backgroundColor;
+
+    // Fill canvas with background color (hides everything initially)
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, W, H);
+
+    // Load logo and prepare a pre-colored version on an offscreen canvas
+    const img = new Image();
+    img.src = 'logo.png';
+    img.onload = () => {
+      const offscreen = document.createElement('canvas');
+      offscreen.width = W; offscreen.height = H;
+      const octx = offscreen.getContext('2d');
+      octx.filter = 'invert(1) contrast(180%) sepia(1) saturate(10) hue-rotate(88deg)';
+      octx.drawImage(img, 0, 0, W, H);
+
+      // Build dot grid and shuffle
+      const step = 3;
+      const dots = [];
+      for (let y = 0; y < H; y += step) {
+        for (let x = 0; x < W; x += step) {
+          dots.push({ x, y });
+        }
+      }
+      for (let i = dots.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = dots[i]; dots[i] = dots[j]; dots[j] = tmp;
+      }
+
+      const totalTime = 4200;
+
+      dots.forEach(dot => {
+        const delay = Math.random() * totalTime;
+        const willFlicker = Math.random() < 0.28;
+        const flickerCount = willFlicker ? Math.floor(Math.random() * 3) + 1 : 0;
+
+        const reveal = () => ctx.drawImage(offscreen, dot.x, dot.y, step, step, dot.x, dot.y, step, step);
+        const hide   = () => { ctx.fillStyle = BG; ctx.fillRect(dot.x, dot.y, step, step); };
+
+        setTimeout(() => {
+          if (flickerCount > 0) {
+            let count = 0;
+            const tick = () => {
+              if (count >= flickerCount * 2) { reveal(); return; }
+              if (count % 2 === 0) reveal(); else hide();
+              count++;
+              setTimeout(tick, 35 + Math.random() * 90);
+            };
+            tick();
+          } else {
+            reveal();
+          }
+        }, delay);
+      });
+    };
+  }
+
   async function runBoot() {
     let prev = 0;
 
@@ -466,7 +491,8 @@
       }
     }
 
-    // ── Reveal logo (CSS handles row animation + text delay) ──
+    // ── Fill canvas first, then reveal logo (prevents one-frame flash of unmasked img) ──
+    animateLogo();
     logoEl.style.display = 'block';
 
     await sleep(1000);
