@@ -443,19 +443,31 @@
 
   async function authenticate() {
     const key = document.getElementById('admin-key-input').value.trim();
-    if (!key) return;
+    if (!key) { flash('auth-flash', 'Enter your admin key.', 'err'); return; }
 
-    // Verify key against backend
-    const res = await fetch(`${API}/admin-shows`, {
-      headers: { 'x-admin-key': key },
-    });
+    const btn = document.getElementById('auth-btn');
+    btn.textContent = '> Authenticating...';
+    btn.disabled = true;
 
-    if (res.ok || res.status !== 401) {
-      adminKey = key;
-      sessionStorage.setItem(KEY_STORE, key);
-      showMain();
-    } else {
-      flash('auth-flash', 'Invalid admin key.', 'err');
+    try {
+      const res = await fetch(`${API}/admin-shows`, {
+        headers: { 'x-admin-key': key },
+      });
+
+      if (res.ok) {
+        adminKey = key;
+        sessionStorage.setItem(KEY_STORE, key);
+        showMain();
+      } else if (res.status === 401) {
+        flash('auth-flash', 'Invalid admin key.', 'err');
+      } else {
+        flash('auth-flash', `Unexpected error (${res.status}). Try again.`, 'err');
+      }
+    } catch (err) {
+      flash('auth-flash', `Connection error: ${err.message}`, 'err');
+    } finally {
+      btn.textContent = '> Authenticate';
+      btn.disabled = false;
     }
   }
 
