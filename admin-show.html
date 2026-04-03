@@ -258,7 +258,7 @@
         return `
           <div style="border:1px solid var(--green-dark); padding:.5rem .7rem; margin-bottom:.4rem; background:rgba(0,255,65,.02); ${b.status === 'cancelled' ? 'opacity:.5;' : ''}">
             <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
-              <span style="font-size:.82rem; color:var(--green);">${name}</span>
+              <a href="${c ? 'admin-comedian.html?id=' + c.id : '#'}" style="font-size:.82rem; color:var(--green); text-decoration:none;" onclick="event.stopPropagation()">${name}</a>
               ${statusBadge}
               <span style="font-size:.68rem; color:var(--green-dim); margin-left:auto;">${b.title || ''}</span>
             </div>
