@@ -218,15 +218,15 @@
     const textarea = document.getElementById('day-of-msg');
     const v = show.venues;
 
-    let msg = `It's showtime! Here are your details for tonight's Offline Comedy show:\n\n`;
-    msg += `Date: ${show.date}\n`;
-    msg += `Time: ${show.show_time || 'TBD'}\n`;
+    let msg = `Tonight's the night! Here are your Offline Comedy show details:\n\n`;
     if (v) {
-      msg += `\nVenue: ${v.name}\nAddress: ${v.address}\n${v.city}, ${v.state} ${v.zip_code}`;
+      msg += `Location: ${v.name}\n${v.address}\n${v.city}, ${v.state} ${v.zip_code}\n`;
     } else {
-      msg += `City: ${show.city}`;
+      msg += `Location: ${show.city} (full address coming soon)\n`;
     }
-    msg += `\n\nSee you there!`;
+    msg += `Time: ${show.show_time || 'TBD'}\n`;
+    msg += `\nREMINDER: This is an offline experience. No phone usage is permitted during the show. Phones must be stored away upon entry.\n`;
+    msg += `\nSee you there!`;
     textarea.value = msg;
   }
 
