@@ -143,6 +143,12 @@
 
       <hr class="sep" />
 
+      <!-- Lineup -->
+      <div class="section-label">lineup</div>
+      <div id="lineup-list"><div class="ln dim">Loading...</div></div>
+
+      <hr class="sep" />
+
       <!-- Ticket Link for Guests -->
       <div class="section-label">ticket purchase link</div>
       <div class="link-box">
@@ -192,6 +198,9 @@
       </div>
     `;
 
+    // Load lineup
+    loadLineup();
+
     // Wire up buttons
     document.getElementById('save-dayof-btn').addEventListener('click', saveDayOf);
     const sendDayOfBtn = document.getElementById('send-dayof-btn');
@@ -202,6 +211,68 @@
     // Pre-fill day-of message with venue if empty
     if (!show.day_of_message) {
       preFillVenue();
+    }
+  }
+
+  async function loadLineup() {
+    const el = document.getElementById('lineup-list');
+    try {
+      const res = await fetch(`${API}/show-bookings?show_id=${showId}`, {
+        headers: { 'x-admin-key': adminKey },
+      });
+      const bookings = await res.json();
+      if (!res.ok) throw new Error(bookings.error);
+
+      if (bookings.length === 0) {
+        el.innerHTML = '<div class="ln dim">$ no comedians booked for this show</div>';
+        return;
+      }
+
+      // Sort: headliners first, then by title
+      const order = { 'Closer/Headliner': 0, 'Feature': 1, 'Host': 2, 'Guest spot': 3 };
+      bookings.sort((a, b) => {
+        const aOrder = order[a.title] !== undefined ? order[a.title] : 4;
+        const bOrder = order[b.title] !== undefined ? order[b.title] : 4;
+        return aOrder - bOrder;
+      });
+
+      const ratingColors = {
+        5: 'var(--green)',
+        4: 'var(--green)',
+        3: 'var(--green-dim)',
+        2: 'var(--yellow)',
+        1: 'var(--red)',
+      };
+
+      el.innerHTML = bookings.map(b => {
+        const c = b.comedians;
+        const name = c ? c.name : 'Unknown';
+        const ig = c && c.instagram ? `@${c.instagram}` : '';
+        const followers = c && c.followers ? c.followers.toLocaleString() : '';
+        const rate = b.rate_cents ? '$' + (b.rate_cents / 100).toFixed(0) : '';
+        const ratingColor = ratingColors[b.rating] || 'var(--green-dim)';
+        const statusBadge = b.status === 'cancelled'
+          ? '<span style="color:var(--red);font-size:.68rem;"> CANCELLED</span>'
+          : '';
+
+        return `
+          <div style="border:1px solid var(--green-dark); padding:.5rem .7rem; margin-bottom:.4rem; background:rgba(0,255,65,.02); ${b.status === 'cancelled' ? 'opacity:.5;' : ''}">
+            <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+              <span style="font-size:.82rem; color:var(--green);">${name}</span>
+              ${statusBadge}
+              <span style="font-size:.68rem; color:var(--green-dim); margin-left:auto;">${b.title || ''}</span>
+            </div>
+            <div style="display:flex; gap:1rem; flex-wrap:wrap; font-size:.7rem; color:var(--green-dim); margin-top:.25rem;">
+              ${rate ? `<span>RATE: <em style="color:var(--green)">${rate}</em></span>` : ''}
+              ${b.rating ? `<span>RATING: <em style="color:${ratingColor}">${b.rating}/5 ${b.rating_label || ''}</em></span>` : ''}
+              ${b.set_minutes ? `<span>SET: <em style="color:var(--green)">${b.set_minutes}min</em></span>` : ''}
+              ${followers ? `<span>FOLLOWERS: <em style="color:var(--green)">${followers}</em></span>` : ''}
+            </div>
+            ${b.notes ? `<div style="font-size:.68rem; color:var(--green-dim); margin-top:.3rem; font-style:italic;">${b.notes}</div>` : ''}
+          </div>`;
+      }).join('');
+    } catch (err) {
+      el.innerHTML = `<div class="ln yellow">$ ${err.message}</div>`;
     }
   }
 
