@@ -310,7 +310,7 @@
           : '';
 
         const isPaid = b.payment_status === 'paid';
-        const canPay = !isPaid && b.rate_cents && b.status !== 'cancelled';
+        const canPay = !isPaid && b.rate_cents && b.status !== 'cancelled' && show.status === 'completed';
         const hasStripe = c && c.stripe_account_id && c.onboarding_status === 'complete';
 
         let payHTML = '';
