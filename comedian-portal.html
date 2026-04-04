@@ -329,6 +329,29 @@
       const stripeConnectInstance = StripeConnect.init({
         publishableKey: STRIPE_PK,
         fetchClientSecret: () => data.client_secret,
+        appearance: {
+          overlays: 'dialog',
+          variables: {
+            fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+            colorPrimary: '#00ff41',
+            colorBackground: '#050505',
+            colorText: '#00ff41',
+            colorSecondaryText: '#00b32c',
+            colorBorder: '#003b0f',
+            borderRadius: '2px',
+            colorDanger: '#ff4444',
+            buttonPrimaryColorBackground: '#00ff41',
+            buttonPrimaryColorText: '#000000',
+            buttonPrimaryColorBorder: '#00ff41',
+            buttonSecondaryColorBackground: 'transparent',
+            buttonSecondaryColorText: '#00ff41',
+            buttonSecondaryColorBorder: '#00b32c',
+            actionPrimaryColorText: '#00ff41',
+            actionSecondaryColorText: '#00b32c',
+            formBackgroundColor: '#0a0a0a',
+            formHighlightColorBorder: '#00ff41',
+          },
+        },
       });
 
       container.innerHTML = '';
