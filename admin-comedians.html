@@ -58,6 +58,7 @@
     .c-1099.not_started { border-color:var(--red); color:var(--red); }
     .c-1099.pending { border-color:var(--yellow); color:var(--yellow); }
     .c-1099.complete { border-color:var(--green); color:var(--green); }
+    .c-1099.unpaid { border-color:var(--yellow); color:var(--yellow); }
     .c-balance { font-size:.7rem; color:var(--yellow); min-width:60px; text-align:right; }
 
     .stats-bar { display:flex; gap:1.2rem; flex-wrap:wrap; font-size:.72rem; color:var(--green-dim); margin-bottom:.8rem; }
@@ -210,9 +211,11 @@
 
       // Stats
       const total = allComedians.length;
-      const onboarded = allComedians.filter(c => c.onboarding_status === 'complete').length;
+      const withBalance = allComedians.filter(c => c.outstanding_cents > 0);
+      const totalOwed = withBalance.reduce((s, c) => s + c.outstanding_cents, 0);
+      const noTax = allComedians.filter(c => !c.onboarding_status || c.onboarding_status === 'not_started').length;
       document.getElementById('stats-bar').innerHTML =
-        `TOTAL: <em>${total}</em> &nbsp; 1099 COMPLETE: <em>${onboarded}</em> &nbsp; PENDING: <em>${allComedians.filter(c => c.onboarding_status === 'pending').length}</em>`;
+        `TOTAL: <em>${total}</em> &nbsp; ${totalOwed > 0 ? `OUTSTANDING: <em style="color:var(--yellow)">$${(totalOwed / 100).toLocaleString()}</em> (${withBalance.length})` : ''} &nbsp; ${noTax > 0 ? `NO 1099: <em style="color:var(--red)">${noTax}</em>` : ''}`;
 
       renderList(allComedians);
     } catch (err) {
@@ -234,14 +237,22 @@
       const row = document.createElement('div');
       row.className = 'comedian-row';
 
-      const onboardClass = c.onboarding_status || 'not_started';
-      const onboardLabel = onboardClass === 'complete' ? '1099' : onboardClass === 'pending' ? 'PENDING' : 'NO 1099';
+      const onboardStatus = c.onboarding_status || 'not_started';
+      const balance = c.outstanding_cents || 0;
+
+      let badges = '';
+      if (onboardStatus !== 'complete') {
+        badges += `<span class="c-1099 ${onboardStatus}">${onboardStatus === 'pending' ? 'PENDING' : 'NO 1099'}</span>`;
+      }
+      if (balance > 0) {
+        badges += `<span class="c-1099 unpaid">OWED $${(balance / 100).toLocaleString()}</span>`;
+      }
 
       row.innerHTML = `
         <span class="c-name">${c.name}</span>
         <span class="c-ig">${c.instagram ? '@' + c.instagram : ''}</span>
         <span class="c-followers">${c.followers ? c.followers.toLocaleString() : '—'}</span>
-        <span class="c-1099 ${onboardClass}">${onboardLabel}</span>
+        ${badges}
       `;
 
       row.addEventListener('click', () => {
