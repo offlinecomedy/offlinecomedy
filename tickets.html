@@ -69,6 +69,8 @@
     }
     .dots { display: flex; gap: 6px; }
     .dot  { width: 11px; height: 11px; border-radius: 50%; background: var(--green-dim); opacity: .45; }
+    .dot-close { cursor:pointer; transition:background .15s, opacity .15s; }
+    .dot-close:hover { background:#ff4444; opacity:1; }
     .terminal-title { flex: 1; text-align: center; font-size: .68rem; color: var(--green-dim); letter-spacing: .18em; }
 
     .terminal-body { padding: 1.4rem 1.6rem 2rem; background: var(--bg); }
@@ -208,10 +210,11 @@
   </style>
 </head>
 <body>
+<div id="ocean-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;overflow:hidden"><video id="ocean-video" loop playsinline style="position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);object-fit:cover"></video></div>
 
 <div class="terminal">
   <div class="terminal-bar">
-    <div class="dots"><div class="dot dot-close" onclick="history.back()" title="Back"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="dots"><div class="dot dot-close" onclick="smartClose()" title="Close"></div><div class="dot"></div><div class="dot"></div></div>
     <div class="terminal-title">offlinecomedy.com — ticket_checkout.enc</div>
   </div>
 
@@ -480,5 +483,5 @@
 
   loadShow();
 </script>
-</body>
+<script>function smartClose(){if(window.history.length<=1){var o=document.getElementById("ocean-overlay"),v=document.getElementById("ocean-video");v.src="https://cdn.pixabay.com/video/2024/06/04/215044_large.mp4";v.play();o.style.display="block";o.addEventListener("click",function(){v.pause();o.style.display="none"})}else{history.back()}}</script></body>
 </html>
