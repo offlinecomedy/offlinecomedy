@@ -268,11 +268,10 @@
   </style>
 </head>
 <body>
-<div id="ocean-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;overflow:hidden"><iframe id="ocean-iframe" style="position:absolute;top:50%;left:50%;width:120vw;height:120vh;transform:translate(-50%,-50%);border:none;pointer-events:none" allow="autoplay" allowfullscreen></iframe><div id="ocean-click-layer" style="position:absolute;inset:0;z-index:1;cursor:pointer"></div></div>
 
 <div class="terminal">
   <div class="terminal-bar">
-    <div class="dots"><div class="dot dot-close" onclick="smartClose()" title="Close"></div><div class="dot"></div><div class="dot"></div></div>
+    <div class="dots"><div class="dot dot-close" onclick="history.back()" title="Back"></div><div class="dot"></div><div class="dot"></div></div>
     <div class="terminal-title">offlinecomedy.com — show_schedule.enc</div>
   </div>
 
@@ -904,5 +903,5 @@
 
   run();
 </script>
-<script>function smartClose(){if(window.history.length<=1){var o=document.getElementById("ocean-overlay"),f=document.getElementById("ocean-iframe");f.src="https://www.youtube.com/embed/WHPEKLQID4U?autoplay=1&loop=1&playlist=WHPEKLQID4U&controls=0&showinfo=0&modestbranding=1&rel=0&mute=0";o.style.display="block";document.getElementById("ocean-click-layer").addEventListener("click",function(){f.src="";o.style.display="none"})}else{history.back()}}</script></body>
+</body>
 </html>
