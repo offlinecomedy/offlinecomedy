@@ -68,7 +68,7 @@
   const comedianId = params.get('id');
   const adminKey = sessionStorage.getItem('oc_admin_key');
 
-  if (!adminKey) window.location.href = 'admin.html';
+  if (!adminKey) window.location.href = 'manage-shows.html';
 
   async function load() {
     if (!comedianId) {

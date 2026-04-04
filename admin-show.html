@@ -66,7 +66,7 @@
   <div class="terminal-body">
     <div id="loading"><div class="ln dim">$ loading show<span class="cur"></span></div></div>
     <div id="content" style="display:none"></div>
-    <a href="admin.html" class="back-link">&lt; back to shows</a>
+    <a href="manage-shows.html" class="back-link">&lt; back to shows</a>
     <div style="margin-top:1rem"><span class="ln dim">&gt; </span><span class="cur"></span></div>
   </div>
 </div>
@@ -78,7 +78,7 @@
   const adminKey = sessionStorage.getItem('oc_admin_key');
 
   if (!adminKey) {
-    window.location.href = 'admin.html';
+    window.location.href = 'manage-shows.html';
   }
 
   let show = null;
@@ -205,7 +205,7 @@
       <!-- Navigation -->
       <div class="section-label">actions</div>
       <div class="btn-row">
-        <button class="btn btn-dim" onclick="window.location.href='admin.html?edit=${showId}'" style="font-size:.72rem; padding:.4rem .8rem;">&#9998; Edit show</button>
+        <button class="btn btn-dim" onclick="window.location.href='manage-shows.html?edit=${showId}'" style="font-size:.72rem; padding:.4rem .8rem;">&#9998; Edit show</button>
         <a href="${checkinLink}" class="btn btn-dim" style="font-size:.72rem; padding:.4rem .8rem; text-decoration:none;">&#10003; Guest check-in</a>
         <button class="btn" id="delete-show-btn" style="font-size:.72rem; padding:.4rem .8rem; border-color:var(--red); color:var(--red);">&#10005; Delete show</button>
       </div>
@@ -262,7 +262,7 @@
         body: JSON.stringify({ id: showId }),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
-      window.location.href = 'admin.html';
+      window.location.href = 'manage-shows.html';
     } catch (err) {
       alert(err.message);
     }
