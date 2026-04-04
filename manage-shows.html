@@ -169,7 +169,7 @@
   </style>
 </head>
 <body>
-<div id="ocean-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;overflow:hidden"><video id="ocean-video" loop playsinline style="position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);object-fit:cover"></video></div>
+<div id="ocean-overlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:10000;background:#000;overflow:hidden"><iframe id="ocean-iframe" style="position:absolute;top:50%;left:50%;width:120vw;height:120vh;transform:translate(-50%,-50%);border:none;pointer-events:none" allow="autoplay" allowfullscreen></iframe><div id="ocean-click-layer" style="position:absolute;inset:0;z-index:1;cursor:pointer"></div></div>
 
 <div class="terminal">
   <div class="terminal-bar">
@@ -1049,5 +1049,5 @@
     }
   }
 </script>
-<script>function smartClose(){if(window.history.length<=1){var o=document.getElementById("ocean-overlay"),v=document.getElementById("ocean-video");v.src="https://cdn.pixabay.com/video/2024/06/04/215044_large.mp4";v.play();o.style.display="block";o.addEventListener("click",function(){v.pause();o.style.display="none"})}else{history.back()}}</script></body>
+<script>function smartClose(){if(window.history.length<=1){var o=document.getElementById("ocean-overlay"),f=document.getElementById("ocean-iframe");f.src="https://www.youtube.com/embed/WHPEKLQID4U?autoplay=1&loop=1&playlist=WHPEKLQID4U&controls=0&showinfo=0&modestbranding=1&rel=0&mute=0";o.style.display="block";document.getElementById("ocean-click-layer").addEventListener("click",function(){f.src="";o.style.display="none"})}else{history.back()}}</script></body>
 </html>

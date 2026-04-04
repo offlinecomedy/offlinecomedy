@@ -301,7 +301,8 @@
 
 <!-- Ocean overlay -->
 <div id="ocean-overlay">
-  <video id="ocean-video" loop playsinline></video>
+  <iframe id="ocean-iframe" style="position:absolute;top:50%;left:50%;width:120vw;height:120vh;transform:translate(-50%,-50%);border:none;pointer-events:none;" allow="autoplay" allowfullscreen></iframe>
+  <div id="ocean-click-layer" style="position:absolute;inset:0;z-index:1;cursor:pointer;"></div>
 </div>
 
 <div class="terminal">
@@ -545,18 +546,11 @@
   // ── Go Offline (ocean waves) ──────────────────────────────────────────────
   function goOffline() {
     const overlay = document.getElementById('ocean-overlay');
-    const video = document.getElementById('ocean-video');
-    video.src = 'https://cdn.pixabay.com/video/2015/08/07/211-135736977_large.mp4';
-    video.muted = false;
-    video.play().catch(() => {
-      // Autoplay blocked — try muted first then unmute
-      video.muted = true;
-      video.play().then(() => { video.muted = false; });
-    });
+    const iframe = document.getElementById('ocean-iframe');
+    iframe.src = 'https://www.youtube.com/embed/WHPEKLQID4U?autoplay=1&loop=1&playlist=WHPEKLQID4U&controls=0&showinfo=0&modestbranding=1&rel=0&mute=0';
     overlay.style.display = 'block';
-    overlay.addEventListener('click', () => {
-      video.pause();
-      video.src = '';
+    document.getElementById('ocean-click-layer').addEventListener('click', () => {
+      iframe.src = '';
       overlay.style.display = 'none';
     });
   }
